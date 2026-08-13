@@ -31,35 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'คิวแคดดี้';
 $leadMinutes = getAdvanceBookingLeadMinutes($pdo);
-
-// สถานะที่แสดงผล (status) ตัดแคดดี้ที่มีวันลาครอบคลุมวันนี้ออกจากคิวโดยอัตโนมัติ เว้นแต่พนักงานตั้งสถานะเป็น "พร้อม" เอง (raw_status)
-// ซึ่งถือเป็นการดึงกลับเข้าคิวเองตาม AC — คำนวณจากวันที่ปัจจุบันตอน query ทุกครั้ง ไม่ต้องมี background job
-// next_booking_at: การจองล่วงหน้าที่ยังไม่ถึงเวลา (แสดงป้ายเสมอ) — is_protected: ใกล้ถึงเวลานัดภายใน lead_minutes แล้ว (ไม่นับเป็นลำดับคิวถึงจะสถานะพร้อม)
-$stmt = $pdo->prepare(
-    "SELECT c.id, c.full_name, cqs.status AS raw_status, cqs.last_ready_at,
-            CASE
-                WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
-                ELSE cqs.status
-            END AS status,
-            ab.next_booking_at, ab.is_protected
-     FROM caddies c
-     LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
-     LEFT JOIN (
-         SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
-     ) lr ON lr.caddy_id = c.id
-     LEFT JOIN (
-         SELECT caddy_id,
-                MIN(scheduled_at) AS next_booking_at,
-                MAX(CASE WHEN NOW() BETWEEN DATE_SUB(scheduled_at, INTERVAL ? MINUTE) AND scheduled_at THEN 1 ELSE 0 END) AS is_protected
-         FROM rounds
-         WHERE status = 'scheduled' AND caddy_id IS NOT NULL AND scheduled_at >= NOW()
-         GROUP BY caddy_id
-     ) ab ON ab.caddy_id = c.id
-     WHERE c.is_active = 1
-     ORDER BY CASE WHEN status = 'ready' THEN 0 ELSE 1 END, cqs.last_ready_at ASC, c.full_name ASC"
-);
-$stmt->execute([$leadMinutes]);
-$queue = $stmt->fetchAll();
+$queue = fetchQueueBoard($pdo, $leadMinutes);
 
 $seq = 0;
 
