@@ -42,3 +42,8 @@ function queueStatusBadgeClass(?string $status): string
         default => 'badge-neutral',
     };
 }
+
+function getAdvanceBookingLeadMinutes(PDO $pdo): int
+{
+    return (int) $pdo->query('SELECT lead_minutes FROM advance_booking_settings WHERE id = 1')->fetchColumn();
+}

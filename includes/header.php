@@ -28,6 +28,7 @@ $flash = getFlash();
             <a href="<?= BASE_URL ?>/queue/board.php">คิวแคดดี้</a>
             <a href="<?= BASE_URL ?>/caddies/list.php">ทะเบียนแคดดี้</a>
             <a href="<?= BASE_URL ?>/leave/index.php">การลา</a>
+            <a href="<?= BASE_URL ?>/bookings/create.php">จองแคดดี้ล่วงหน้า</a>
         <?php endif; ?>
         <?php if (isAdmin()): ?>
             <a href="<?= BASE_URL ?>/wage-rates/edit.php">อัตราค่าจ้าง</a>

@@ -223,6 +223,9 @@ tr:hover td { background: #f9f9f7; }
 .badge-status-waiting { background: rgba(59,130,246,0.15); color: var(--status-waiting); }
 .badge-status-leave { background: rgba(100,116,139,0.15); color: var(--status-leave); }
 
+/* จองล่วงหน้า — badge สไตล์ "premium" ขอบทอง ตาม design system */
+.badge-booking { background: #fff8e1; color: #92722a; border: 1px solid #d4af37; }
+
 .alert { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; font-size: 14px; }
 .alert-success { background: #dcfce7; color: #166534; }
 .alert-error, .alert-danger { background: #fee2e2; color: #991b1b; }

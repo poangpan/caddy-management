@@ -6,6 +6,7 @@ requireRole(['queue_hr', 'admin']);
 
 $pageTitle = 'มอบหมายออกรอบ';
 $errors = [];
+$leadMinutes = getAdvanceBookingLeadMinutes($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customerName = trim($_POST['customer_name'] ?? '');
@@ -32,30 +33,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $caddyId = $requestedCaddyId;
                 $caddyRequested = 1;
                 $stmt = $pdo->prepare(
-                    "SELECT CASE
-                        WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
-                        ELSE cqs.status
-                     END AS status
+                    "SELECT
+                        CASE
+                            WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
+                            ELSE cqs.status
+                        END AS status,
+                        ab.scheduled_at AS booking_scheduled_at
                      FROM caddies c
                      LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
                      LEFT JOIN (
                          SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
                      ) lr ON lr.caddy_id = c.id
+                     LEFT JOIN (
+                         SELECT caddy_id, MIN(scheduled_at) AS scheduled_at
+                         FROM rounds
+                         WHERE status = 'scheduled' AND caddy_id IS NOT NULL
+                           AND NOW() BETWEEN DATE_SUB(scheduled_at, INTERVAL ? MINUTE) AND scheduled_at
+                         GROUP BY caddy_id
+                     ) ab ON ab.caddy_id = c.id
                      WHERE c.id = ?"
                 );
-                $stmt->execute([$caddyId]);
-                $status = $stmt->fetchColumn() ?: null;
-                if ($status !== 'ready') {
+                $stmt->execute([$leadMinutes, $caddyId]);
+                $row = $stmt->fetch();
+                $status = $row['status'] ?: null;
+                if ($row['booking_scheduled_at']) {
+                    $notice = 'หมายเหตุ: แคดดี้ที่ระบุมีการจองล่วงหน้าไว้ในเวลาใกล้เคียง (นัด ' . $row['booking_scheduled_at'] . ') — มอบหมายให้ตามที่ระบุ เนื่องจากเป็นการตัดสินใจของพนักงานหน้างาน';
+                } elseif ($status !== 'ready') {
                     $notice = 'หมายเหตุ: แคดดี้ที่ระบุไม่อยู่ในสถานะพร้อม (สถานะปัจจุบัน: ' . queueStatusLabel($status) . ') — มอบหมายให้ตามที่ระบุ เนื่องจากเป็นการตัดสินใจของพนักงานหน้างาน';
                 }
             }
         } else {
-            $next = $pdo->query(
+            $stmt = $pdo->prepare(
                 "SELECT c.id FROM caddies c
                  JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
                  WHERE c.is_active = 1 AND cqs.status = 'ready'
+                   AND c.id NOT IN (
+                       SELECT caddy_id FROM rounds
+                       WHERE status = 'scheduled' AND caddy_id IS NOT NULL
+                         AND NOW() BETWEEN DATE_SUB(scheduled_at, INTERVAL ? MINUTE) AND scheduled_at
+                   )
                  ORDER BY cqs.last_ready_at ASC LIMIT 1"
-            )->fetch();
+            );
+            $stmt->execute([$leadMinutes]);
+            $next = $stmt->fetch();
             if (!$next) {
                 $errors[] = 'ไม่มีแคดดี้พร้อมอยู่ในคิว';
             } else {
@@ -80,24 +100,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$caddyOptions = $pdo->query(
+$stmt = $pdo->prepare(
     "SELECT c.id, c.full_name,
             CASE
                 WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
                 ELSE cqs.status
-            END AS status
+            END AS status,
+            ab.scheduled_at AS booking_scheduled_at
      FROM caddies c
      LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
      LEFT JOIN (
          SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
      ) lr ON lr.caddy_id = c.id
+     LEFT JOIN (
+         SELECT caddy_id, MIN(scheduled_at) AS scheduled_at
+         FROM rounds
+         WHERE status = 'scheduled' AND caddy_id IS NOT NULL
+           AND NOW() BETWEEN DATE_SUB(scheduled_at, INTERVAL ? MINUTE) AND scheduled_at
+         GROUP BY caddy_id
+     ) ab ON ab.caddy_id = c.id
      WHERE c.is_active = 1
      ORDER BY c.full_name"
-)->fetchAll();
+);
+$stmt->execute([$leadMinutes]);
+$caddyOptions = $stmt->fetchAll();
 
 $recentRounds = $pdo->query(
     "SELECT r.holes, r.customer_name, r.caddy_requested, r.wage_amount, r.assigned_at, c.full_name
      FROM rounds r JOIN caddies c ON c.id = r.caddy_id
+     WHERE r.status != 'scheduled'
      ORDER BY r.assigned_at DESC LIMIT 10"
 )->fetchAll();
 
@@ -143,7 +174,7 @@ require __DIR__ . '/../includes/header.php';
                 <option value="">-- เลือกแคดดี้ --</option>
                 <?php foreach ($caddyOptions as $c): ?>
                     <option value="<?= $c['id'] ?>" <?= (int) ($_POST['caddy_id'] ?? 0) === (int) $c['id'] ? 'selected' : '' ?>>
-                        <?= e($c['full_name']) ?> (<?= e(queueStatusLabel($c['status'])) ?>)
+                        <?= e($c['full_name']) ?> (<?= e(queueStatusLabel($c['status'])) ?><?= $c['booking_scheduled_at'] ? ', จองไว้ ' . e($c['booking_scheduled_at']) : '' ?>)
                     </option>
                 <?php endforeach; ?>
             </select>
