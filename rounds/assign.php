@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/wage.php';
 requireRole(['queue_hr', 'admin']);
 
 $pageTitle = 'มอบหมายออกรอบ';
@@ -53,8 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors) && $caddyId) {
-        $pdo->prepare('INSERT INTO rounds (caddy_id, holes, customer_name, caddy_requested) VALUES (?, ?, ?, ?)')
-            ->execute([$caddyId, $holes, $customerName, $caddyRequested]);
+        $wageAmount = calculateRoundWage($pdo, $holes);
+        $pdo->prepare('INSERT INTO rounds (caddy_id, holes, customer_name, caddy_requested, wage_amount) VALUES (?, ?, ?, ?, ?)')
+            ->execute([$caddyId, $holes, $customerName, $caddyRequested, $wageAmount]);
 
         $pdo->prepare(
             "INSERT INTO caddy_queue_status (caddy_id, status) VALUES (?, 'on_round')
@@ -76,7 +78,7 @@ $caddyOptions = $pdo->query(
 )->fetchAll();
 
 $recentRounds = $pdo->query(
-    "SELECT r.holes, r.customer_name, r.caddy_requested, r.assigned_at, c.full_name
+    "SELECT r.holes, r.customer_name, r.caddy_requested, r.wage_amount, r.assigned_at, c.full_name
      FROM rounds r JOIN caddies c ON c.id = r.caddy_id
      ORDER BY r.assigned_at DESC LIMIT 10"
 )->fetchAll();
@@ -155,6 +157,7 @@ require __DIR__ . '/../includes/header.php';
             <th>ลูกค้า</th>
             <th>หลุม</th>
             <th>Caddy request</th>
+            <th>ค่าจ้าง</th>
         </tr>
         <?php foreach ($recentRounds as $r): ?>
         <tr>
@@ -163,6 +166,7 @@ require __DIR__ . '/../includes/header.php';
             <td><?= e($r['customer_name']) ?></td>
             <td><?= e($r['holes']) ?></td>
             <td><?= $r['caddy_requested'] ? 'ใช่' : '-' ?></td>
+            <td class="font-mono"><?= e($r['wage_amount']) ?></td>
         </tr>
         <?php endforeach; ?>
     </table>

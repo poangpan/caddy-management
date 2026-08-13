@@ -37,6 +37,14 @@ mysql -u root -p --default-character-set=utf8mb4 < database/schema.sql
 
 This creates the `caddy_management` database, its tables, and a seed admin account.
 
+Then apply migrations in order (each one is a single ticket's schema increment):
+
+```bash
+for f in database/migrations/*.sql; do
+    mysql -u root -p --default-character-set=utf8mb4 caddy_management < "$f"
+done
+```
+
 ### 2. Configure the database connection
 
 Defaults live in `config/db.php`; override via environment variables for production:
@@ -63,11 +71,22 @@ Then open `http://<host>:8080`. For production, point Apache/IIS at this folder 
 
 Change this password immediately after first login, via "จัดการผู้ใช้งาน" (User management).
 
+## Testing
+
+There's no PHPUnit/Composer setup yet (matches the no-framework philosophy of the sibling apps). High-risk logic gets small, dependency-free automated test scripts under `tests/`, run directly with the CLI:
+
+```bash
+php tests/wage_calculation_test.php
+```
+
+Everything else is verified via curl walkthroughs against a real local database, following the same manual/scripted pattern used by `it-requisition`.
+
 ## Repo layout
 
 - **`.scratch/caddy-management/spec.md`** — full spec: problem statement, user stories, implementation decisions, testing decisions, and out-of-scope items.
 - **`config/`, `includes/`, `assets/`** — app bootstrap (DB connection, auth/session, shared layout, CSS)
 - **`database/schema.sql`** — baseline schema; incremental changes land under `database/migrations/`
+- **`tests/`** — dependency-free automated tests for high-risk logic (see Testing above)
 - **`users/`** — admin-only user account management
 - **`ref/`** — reference prototypes and design notes per feature area (advance booking, caddy directory, queue dashboard, payroll/accounting summary, fairway precision).
 - **`docs/agents/`** — configuration consumed by Claude Code agent skills (issue tracker, domain docs conventions).
@@ -75,4 +94,4 @@ Change this password immediately after first login, via "จัดการผ�
 
 ## Status
 
-Auth and user management (issue #1) implemented. Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
+Issues #1–#5 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation). Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.

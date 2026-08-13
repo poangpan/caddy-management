@@ -29,6 +29,7 @@ $flash = getFlash();
             <a href="<?= BASE_URL ?>/caddies/list.php">ทะเบียนแคดดี้</a>
         <?php endif; ?>
         <?php if (isAdmin()): ?>
+            <a href="<?= BASE_URL ?>/wage-rates/edit.php">อัตราค่าจ้าง</a>
             <a href="<?= BASE_URL ?>/users/list.php">จัดการผู้ใช้งาน</a>
         <?php endif; ?>
     </nav>
