@@ -71,15 +71,26 @@ Then open `http://<host>:8080`. For production, point Apache/IIS at this folder 
 
 Change this password immediately after first login, via "จัดการผู้ใช้งาน" (User management).
 
+## Running with Docker
+
+An alternative to the manual setup above — builds the app on `php:8.2-apache` and runs MariaDB alongside it, auto-loading `schema.sql` plus every file under `database/migrations/` on first start:
+
+```bash
+docker compose up -d --build
+```
+
+App: `http://localhost:8081` (same seed login as above). DB is exposed on host port `3308` if you need to connect directly. Adding a new migration later means also adding a mount line for it in `docker-compose.yml` (`db.volumes`), numbered so it sorts after `000_schema.sql` — there's no migration runner, so the ordering is just filename order.
+
 ## Testing
 
 There's no PHPUnit/Composer setup yet (matches the no-framework philosophy of the sibling apps). High-risk logic gets small, dependency-free automated test scripts under `tests/`, run directly with the CLI:
 
 ```bash
 php tests/wage_calculation_test.php
+php tests/payroll_close_test.php
 ```
 
-Everything else is verified via curl walkthroughs against a real local database, following the same manual/scripted pattern used by `it-requisition`.
+(or `docker compose exec app php tests/<name>.php` if running via Docker). Everything else is verified via curl walkthroughs against a real database, following the same manual/scripted pattern used by `it-requisition`.
 
 ## Repo layout
 
@@ -87,6 +98,7 @@ Everything else is verified via curl walkthroughs against a real local database,
 - **`config/`, `includes/`, `assets/`** — app bootstrap (DB connection, auth/session, shared layout, CSS)
 - **`database/schema.sql`** — baseline schema; incremental changes land under `database/migrations/`
 - **`tests/`** — dependency-free automated tests for high-risk logic (see Testing above)
+- **`Dockerfile`, `docker-compose.yml`** — containerized run (see Running with Docker above)
 - **`users/`** — admin-only user account management
 - **`ref/`** — reference prototypes and design notes per feature area (advance booking, caddy directory, queue dashboard, payroll/accounting summary, fairway precision).
 - **`docs/agents/`** — configuration consumed by Claude Code agent skills (issue tracker, domain docs conventions).
