@@ -30,6 +30,9 @@ $flash = getFlash();
             <a href="<?= BASE_URL ?>/leave/index.php">การลา</a>
             <a href="<?= BASE_URL ?>/bookings/create.php">จองแคดดี้ล่วงหน้า</a>
         <?php endif; ?>
+        <?php if (isAccounting() || isAdmin()): ?>
+            <a href="<?= BASE_URL ?>/payroll/index.php">ปิดยอดค่าจ้าง</a>
+        <?php endif; ?>
         <?php if (isAdmin()): ?>
             <a href="<?= BASE_URL ?>/wage-rates/edit.php">อัตราค่าจ้าง</a>
             <a href="<?= BASE_URL ?>/users/list.php">จัดการผู้ใช้งาน</a>

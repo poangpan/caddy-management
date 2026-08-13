@@ -234,3 +234,7 @@ tr:hover td { background: #f9f9f7; }
 
 .status-form { display: flex; gap: 6px; align-items: center; }
 .status-form select { width: auto; padding: 5px 8px; font-size: 13px; }
+
+/* รอบปิดยอดที่ล็อกแล้ว — overlay สีเทาจางๆ ตาม design system */
+.payroll-locked { background: #f3f2ee; position: relative; }
+.payroll-locked table { opacity: 0.85; }
