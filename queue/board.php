@@ -30,12 +30,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'คิวแคดดี้';
+// สถานะที่แสดงผล (status) ตัดแคดดี้ที่มีวันลาครอบคลุมวันนี้ออกจากคิวโดยอัตโนมัติ เว้นแต่พนักงานตั้งสถานะเป็น "พร้อม" เอง (raw_status)
+// ซึ่งถือเป็นการดึงกลับเข้าคิวเองตาม AC — คำนวณจากวันที่ปัจจุบันตอน query ทุกครั้ง ไม่ต้องมี background job
 $queue = $pdo->query(
-    "SELECT c.id, c.full_name, cqs.status, cqs.last_ready_at
+    "SELECT c.id, c.full_name, cqs.status AS raw_status, cqs.last_ready_at,
+            CASE
+                WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
+                ELSE cqs.status
+            END AS status
      FROM caddies c
      LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
+     LEFT JOIN (
+         SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
+     ) lr ON lr.caddy_id = c.id
      WHERE c.is_active = 1
-     ORDER BY CASE WHEN cqs.status = 'ready' THEN 0 ELSE 1 END, cqs.last_ready_at ASC, c.full_name ASC"
+     ORDER BY CASE WHEN status = 'ready' THEN 0 ELSE 1 END, cqs.last_ready_at ASC, c.full_name ASC"
 )->fetchAll();
 
 require __DIR__ . '/../includes/header.php';
@@ -65,7 +74,7 @@ require __DIR__ . '/../includes/header.php';
                     <input type="hidden" name="caddy_id" value="<?= $row['id'] ?>">
                     <select name="status">
                         <?php foreach ($statuses as $s): ?>
-                            <option value="<?= e($s) ?>" <?= $row['status'] === $s ? 'selected' : '' ?>><?= e(queueStatusLabel($s)) ?></option>
+                            <option value="<?= e($s) ?>" <?= $row['raw_status'] === $s ? 'selected' : '' ?>><?= e(queueStatusLabel($s)) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <button type="submit" class="btn btn-sm btn-secondary">ปรับสถานะ</button>

@@ -31,7 +31,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $caddyId = $requestedCaddyId;
                 $caddyRequested = 1;
-                $stmt = $pdo->prepare('SELECT status FROM caddy_queue_status WHERE caddy_id = ?');
+                $stmt = $pdo->prepare(
+                    "SELECT CASE
+                        WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
+                        ELSE cqs.status
+                     END AS status
+                     FROM caddies c
+                     LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
+                     LEFT JOIN (
+                         SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
+                     ) lr ON lr.caddy_id = c.id
+                     WHERE c.id = ?"
+                );
                 $stmt->execute([$caddyId]);
                 $status = $stmt->fetchColumn() ?: null;
                 if ($status !== 'ready') {
@@ -70,9 +81,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $caddyOptions = $pdo->query(
-    "SELECT c.id, c.full_name, cqs.status
+    "SELECT c.id, c.full_name,
+            CASE
+                WHEN lr.caddy_id IS NOT NULL AND (cqs.status IS NULL OR cqs.status != 'ready') THEN 'leave'
+                ELSE cqs.status
+            END AS status
      FROM caddies c
      LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
+     LEFT JOIN (
+         SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
+     ) lr ON lr.caddy_id = c.id
      WHERE c.is_active = 1
      ORDER BY c.full_name"
 )->fetchAll();
