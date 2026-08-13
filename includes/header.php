@@ -13,6 +13,7 @@ $navIcons = [
     'payroll'   => '<path d="M3 8h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8Z"/><path d="M3 8l2-4h14l2 4M12 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>',
     'wage'      => '<path d="M12 3v18M8 7h5.5a2.5 2.5 0 0 1 0 5H9a2.5 2.5 0 0 0 0 5H16" stroke-linecap="round"/>',
     'users'     => '<path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 9v-1.2A4.8 4.8 0 0 1 8.8 14h.4A4.8 4.8 0 0 1 14 18.8V20M17 8a2 2 0 1 0 0-4M16 14a3.5 3.5 0 0 1 4 3.46V20" stroke-linecap="round"/>',
+    'checkin'   => '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 7v5l3.5 2" stroke-linecap="round" stroke-linejoin="round"/>',
 ];
 
 function navIcon(array $icons, string $key): string
@@ -47,7 +48,8 @@ function navActive(string $path, string $needle): string
         <nav class="sidebar-nav">
             <a class="<?= navActive($currentPath, '/dashboard.php') ?>" href="<?= BASE_URL ?>/dashboard.php"><?= navIcon($navIcons, 'dashboard') ?><span>แดชบอร์ด</span></a>
             <?php if (isQueueHr() || isAdmin()): ?>
-                <a class="<?= navActive($currentPath, '/queue/') ?>" href="<?= BASE_URL ?>/queue/board.php"><?= navIcon($navIcons, 'queue') ?><span>คิวแคดดี้</span></a>
+                <a class="<?= navActive($currentPath, '/queue/board.php') ?>" href="<?= BASE_URL ?>/queue/board.php"><?= navIcon($navIcons, 'queue') ?><span>คิวแคดดี้</span></a>
+                <a class="<?= navActive($currentPath, '/queue/checkin.php') ?>" href="<?= BASE_URL ?>/queue/checkin.php"><?= navIcon($navIcons, 'checkin') ?><span>ลงเวลาเข้างาน</span></a>
                 <a class="<?= navActive($currentPath, '/caddies/') ?>" href="<?= BASE_URL ?>/caddies/list.php"><?= navIcon($navIcons, 'caddies') ?><span>ทะเบียนแคดดี้</span></a>
                 <a class="<?= navActive($currentPath, '/leave/') ?>" href="<?= BASE_URL ?>/leave/index.php"><?= navIcon($navIcons, 'leave') ?><span>การลา</span></a>
                 <a class="<?= navActive($currentPath, '/bookings/') ?>" href="<?= BASE_URL ?>/bookings/create.php"><?= navIcon($navIcons, 'booking') ?><span>จองแคดดี้ล่วงหน้า</span></a>

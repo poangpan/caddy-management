@@ -7,6 +7,7 @@ $pageTitle = 'แดชบอร์ด';
 $user = currentUser();
 
 $readyQueue = [];
+$onRoundQueue = [];
 $waitingQueue = [];
 
 if (isQueueHr() || isAdmin()) {
@@ -15,6 +16,15 @@ if (isQueueHr() || isAdmin()) {
     foreach ($queue as $row) {
         if ($row['status'] === 'ready' && !$row['is_protected']) {
             $readyQueue[] = $row;
+        } elseif ($row['status'] === 'on_round') {
+            $stmt = $pdo->prepare(
+                "SELECT customer_name, holes, assigned_at FROM rounds
+                 WHERE caddy_id = ? AND status = 'in_progress'
+                 ORDER BY assigned_at DESC LIMIT 1"
+            );
+            $stmt->execute([$row['id']]);
+            $row['round'] = $stmt->fetch() ?: null;
+            $onRoundQueue[] = $row;
         } elseif ($row['status'] === 'waiting') {
             $waitingQueue[] = $row;
         }
@@ -28,7 +38,7 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <?php if (isQueueHr() || isAdmin()): ?>
-<div class="two-col">
+<div class="dashboard-grid">
     <div class="card">
         <div class="page-header" style="margin-bottom:12px;">
             <h3>คิวแคดดี้ที่พร้อมออกรอบ (<?= count($readyQueue) ?>)</h3>
@@ -49,6 +59,29 @@ require __DIR__ . '/includes/header.php';
             <?php endforeach; ?>
             <?php if (!$readyQueue): ?>
             <tr><td colspan="3" class="text-muted">ไม่มีแคดดี้พร้อมออกรอบตอนนี้</td></tr>
+            <?php endif; ?>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>แคดดี้ที่กำลังออกรอบ (<?= count($onRoundQueue) ?>)</h3>
+        <table>
+            <tr>
+                <th>ชื่อ-นามสกุล</th>
+                <th>ลูกค้า</th>
+                <th>หลุม</th>
+                <th>เวลาออกรอบ</th>
+            </tr>
+            <?php foreach ($onRoundQueue as $row): ?>
+            <tr>
+                <td><?= e($row['full_name']) ?></td>
+                <td><?= $row['round'] ? e($row['round']['customer_name']) : '-' ?></td>
+                <td><?= $row['round'] ? e($row['round']['holes']) : '-' ?></td>
+                <td class="font-mono text-muted"><?= $row['round'] ? e($row['round']['assigned_at']) : '-' ?></td>
+            </tr>
+            <?php endforeach; ?>
+            <?php if (!$onRoundQueue): ?>
+            <tr><td colspan="4" class="text-muted">ไม่มีแคดดี้ออกรอบอยู่ตอนนี้</td></tr>
             <?php endif; ?>
         </table>
     </div>
