@@ -42,6 +42,7 @@ require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
     <h1>คิวแคดดี้ (FIFO)</h1>
+    <a href="<?= BASE_URL ?>/rounds/assign.php" class="btn btn-primary">+ มอบหมายออกรอบ</a>
 </div>
 
 <div class="card">
