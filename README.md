@@ -94,4 +94,4 @@ Everything else is verified via curl walkthroughs against a real local database,
 
 ## Status
 
-Issues #1–#5 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation). Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
+Issues #1–#6 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting). Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
