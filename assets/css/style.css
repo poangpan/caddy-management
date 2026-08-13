@@ -98,9 +98,28 @@ a:hover { text-decoration: underline; }
 .nav-icon { width: 20px; height: 20px; flex-shrink: 0; }
 
 .sidebar-footer { padding: 16px; border-top: 1px solid rgba(148,163,184,0.3); }
-.sidebar-user { display: flex; flex-direction: column; margin-bottom: 10px; font-size: 13px; }
-.sidebar-user strong { font-size: 14px; }
+.sidebar-user { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+.sidebar-user > div { display: flex; flex-direction: column; min-width: 0; }
+.sidebar-user strong { font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-user span { color: var(--color-muted); }
+
+/* ----- Avatars ----- */
+.avatar {
+    border-radius: 999px;
+    object-fit: cover;
+    background: var(--color-bg);
+    border: 1px solid rgba(148,163,184,0.3);
+    flex-shrink: 0;
+}
+.avatar-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 700;
+}
+.avatar-sm { width: 32px; height: 32px; font-size: 14px; }
+.avatar-md { width: 44px; height: 44px; font-size: 17px; }
+.avatar-lg { width: 84px; height: 84px; font-size: 30px; }
 .btn-logout {
     display: inline-block;
     background: #fee2e2;
@@ -189,6 +208,57 @@ a:hover { text-decoration: underline; }
 }
 .page-header h1 { margin: 0; font-size: 26px; color: var(--color-primary-dark); }
 .page-subtitle { margin: 4px 0 0; color: var(--color-muted); font-size: 14px; }
+
+/* ----- Role selection cards ----- */
+.role-options { display: flex; flex-direction: column; gap: 8px; }
+.role-option {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(148,163,184,0.4);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+}
+.role-option input { width: auto; margin-top: 4px; }
+.role-option p { margin: 2px 0 0; font-size: 13px; color: var(--color-muted); }
+.role-option.is-checked,
+.role-option:has(input:checked) { border-color: var(--color-primary); background: rgba(15,61,46,0.05); }
+
+/* ----- Role permissions panel ----- */
+.permission-role { padding: 14px 0; border-bottom: 1px solid rgba(148,163,184,0.25); }
+.permission-role:last-child { border-bottom: none; padding-bottom: 0; }
+.permission-role-title { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 8px; }
+.role-dot { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
+.role-dot-queue_hr { background: var(--status-waiting); }
+.role-dot-accounting { background: var(--scb-purple); }
+.role-dot-admin { background: var(--status-busy); }
+.permission-list { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.permission-list li { padding: 3px 0 3px 22px; position: relative; color: var(--color-text); }
+.permission-list li.is-allowed::before { content: "✓"; position: absolute; left: 0; color: var(--status-ready); font-weight: 700; }
+.permission-list li.is-denied { color: var(--color-muted); }
+.permission-list li.is-denied::before { content: "✕"; position: absolute; left: 0; color: #dc2626; }
+
+/* ----- Filter tabs ----- */
+.filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-tab {
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-muted);
+    background: var(--color-card);
+    border: 1px solid rgba(148,163,184,0.3);
+}
+.filter-tab:hover { text-decoration: none; background: #f9f9f7; }
+.filter-tab.is-active { background: var(--color-primary); color: #fff !important; border-color: var(--color-primary); }
+
+/* ----- Two-column list + detail panel ----- */
+.two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+.two-col .card:first-child { overflow-x: auto; }
+@media (max-width: 960px) {
+    .two-col { grid-template-columns: 1fr; }
+}
+.detail-panel-photo { display: flex; justify-content: center; margin-bottom: 12px; }
+tr.is-selected-row td { background: rgba(15,61,46,0.05); }
 
 /* ----- Stat tiles ----- */
 .stat-row {

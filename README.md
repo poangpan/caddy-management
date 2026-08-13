@@ -24,8 +24,9 @@ An optional **Android app** (native, distributed as a sideloaded APK, no Play St
 
 ## Requirements
 
-- PHP 8.0+ with the `pdo_mysql` extension
+- PHP 8.0+ with the `pdo_mysql` and `fileinfo` extensions
 - MySQL 5.7+ or MariaDB 10.3+
+- `uploads/caddies/` and `uploads/users/` must be writable by the web server user (caddy/user profile photos)
 
 ## Setup
 
@@ -106,4 +107,4 @@ php tests/payroll_close_test.php
 
 ## Status
 
-Issues #1–#8 and #10 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting, advance booking, payroll close-out, per-caddy summary). Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
+Issues #1–#8 and #10 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting, advance booking, payroll close-out, per-caddy summary), plus a sidebar-based UI restyle and profile photos/last-login tracking for caddies and users (see `ref/`). Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.

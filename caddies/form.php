@@ -5,7 +5,7 @@ requireRole(['queue_hr', 'admin']);
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 
-$caddy = ['full_name' => '', 'phone' => '', 'national_id' => '', 'bank_account_number' => '', 'start_date' => '', 'is_active' => 1];
+$caddy = ['full_name' => '', 'phone' => '', 'national_id' => '', 'bank_account_number' => '', 'start_date' => '', 'is_active' => 1, 'photo_path' => null];
 $errors = [];
 
 if ($id) {
@@ -36,13 +36,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
+        try {
+            $newPhoto = handlePhotoUpload($_FILES, 'photo', 'caddies', $caddy['photo_path']);
+            if ($newPhoto !== null) {
+                $caddy['photo_path'] = $newPhoto;
+            }
+        } catch (RuntimeException $e) {
+            $errors[] = $e->getMessage();
+        }
+    }
+
+    if (empty($errors)) {
         if ($id) {
-            $stmt = $pdo->prepare('UPDATE caddies SET full_name = ?, phone = ?, national_id = ?, bank_account_number = ?, start_date = ?, is_active = ? WHERE id = ?');
-            $stmt->execute([$caddy['full_name'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date'], $caddy['is_active'], $id]);
+            $stmt = $pdo->prepare('UPDATE caddies SET full_name = ?, photo_path = ?, phone = ?, national_id = ?, bank_account_number = ?, start_date = ?, is_active = ? WHERE id = ?');
+            $stmt->execute([$caddy['full_name'], $caddy['photo_path'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date'], $caddy['is_active'], $id]);
             setFlash('success', 'บันทึกการแก้ไขข้อมูลแคดดี้เรียบร้อย');
         } else {
-            $stmt = $pdo->prepare('INSERT INTO caddies (full_name, phone, national_id, bank_account_number, start_date, is_active) VALUES (?, ?, ?, ?, ?, 1)');
-            $stmt->execute([$caddy['full_name'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date']]);
+            $stmt = $pdo->prepare('INSERT INTO caddies (full_name, photo_path, phone, national_id, bank_account_number, start_date, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)');
+            $stmt->execute([$caddy['full_name'], $caddy['photo_path'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date']]);
             setFlash('success', 'เพิ่มแคดดี้เรียบร้อย');
         }
         header('Location: ' . BASE_URL . '/caddies/list.php');
@@ -61,7 +72,18 @@ require __DIR__ . '/../includes/header.php';
         <div class="alert alert-error"><?= e($err) ?></div>
     <?php endforeach; ?>
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>รูปโปรไฟล์</label>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <?php if ($caddy['photo_path']): ?>
+                    <img class="avatar avatar-md" src="<?= BASE_URL ?>/<?= e($caddy['photo_path']) ?>" alt="">
+                <?php else: ?>
+                    <div class="avatar avatar-md avatar-placeholder"><?= e($caddy['full_name'] !== '' ? mb_substr($caddy['full_name'], 0, 1) : '?') ?></div>
+                <?php endif; ?>
+                <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+            </div>
+        </div>
         <div class="form-group">
             <label for="full_name">ชื่อ-นามสกุล *</label>
             <input type="text" id="full_name" name="full_name" value="<?= e($caddy['full_name']) ?>" required>

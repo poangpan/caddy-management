@@ -7,7 +7,7 @@ $currentUserId = currentUser()['id'];
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $isSelf = $id === $currentUserId;
 
-$formUser = ['full_name' => '', 'email' => '', 'role' => 'queue_hr', 'is_active' => 1];
+$formUser = ['full_name' => '', 'email' => '', 'role' => 'queue_hr', 'is_active' => 1, 'photo_path' => null];
 $errors = [];
 
 if ($id) {
@@ -43,18 +43,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
+            $newPhoto = handlePhotoUpload($_FILES, 'photo', 'users', $formUser['photo_path']);
+            if ($newPhoto !== null) {
+                $formUser['photo_path'] = $newPhoto;
+            }
+        } catch (RuntimeException $e) {
+            $errors[] = $e->getMessage();
+        }
+    }
+
+    if (empty($errors)) {
+        try {
             if ($id) {
                 if ($password !== '') {
-                    $stmt = $pdo->prepare('UPDATE users SET full_name = ?, email = ?, role = ?, is_active = ?, password = ? WHERE id = ?');
-                    $stmt->execute([$formUser['full_name'], $formUser['email'], $formUser['role'], $formUser['is_active'], password_hash($password, PASSWORD_DEFAULT), $id]);
+                    $stmt = $pdo->prepare('UPDATE users SET full_name = ?, photo_path = ?, email = ?, role = ?, is_active = ?, password = ? WHERE id = ?');
+                    $stmt->execute([$formUser['full_name'], $formUser['photo_path'], $formUser['email'], $formUser['role'], $formUser['is_active'], password_hash($password, PASSWORD_DEFAULT), $id]);
                 } else {
-                    $stmt = $pdo->prepare('UPDATE users SET full_name = ?, email = ?, role = ?, is_active = ? WHERE id = ?');
-                    $stmt->execute([$formUser['full_name'], $formUser['email'], $formUser['role'], $formUser['is_active'], $id]);
+                    $stmt = $pdo->prepare('UPDATE users SET full_name = ?, photo_path = ?, email = ?, role = ?, is_active = ? WHERE id = ?');
+                    $stmt->execute([$formUser['full_name'], $formUser['photo_path'], $formUser['email'], $formUser['role'], $formUser['is_active'], $id]);
                 }
                 setFlash('success', 'บันทึกการแก้ไขผู้ใช้งานเรียบร้อย');
             } else {
-                $stmt = $pdo->prepare('INSERT INTO users (full_name, email, password, role, is_active) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$formUser['full_name'], $formUser['email'], password_hash($password, PASSWORD_DEFAULT), $formUser['role'], $formUser['is_active']]);
+                $stmt = $pdo->prepare('INSERT INTO users (full_name, photo_path, email, password, role, is_active) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$formUser['full_name'], $formUser['photo_path'], $formUser['email'], password_hash($password, PASSWORD_DEFAULT), $formUser['role'], $formUser['is_active']]);
                 setFlash('success', 'เพิ่มผู้ใช้งานเรียบร้อย');
             }
             header('Location: ' . BASE_URL . '/users/list.php');
@@ -76,7 +87,18 @@ require __DIR__ . '/../includes/header.php';
         <div class="alert alert-error"><?= e($err) ?></div>
     <?php endforeach; ?>
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>รูปโปรไฟล์</label>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <?php if ($formUser['photo_path']): ?>
+                    <img class="avatar avatar-md" src="<?= BASE_URL ?>/<?= e($formUser['photo_path']) ?>" alt="">
+                <?php else: ?>
+                    <div class="avatar avatar-md avatar-placeholder"><?= e($formUser['full_name'] !== '' ? mb_substr($formUser['full_name'], 0, 1) : '?') ?></div>
+                <?php endif; ?>
+                <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+            </div>
+        </div>
         <div class="form-group">
             <label for="full_name">ชื่อ-นามสกุล *</label>
             <input type="text" id="full_name" name="full_name" value="<?= e($formUser['full_name']) ?>" required>
@@ -85,19 +107,36 @@ require __DIR__ . '/../includes/header.php';
             <label for="email">อีเมล *</label>
             <input type="email" id="email" name="email" value="<?= e($formUser['email']) ?>" required>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="role">สิทธิ์การใช้งาน</label>
-                <select id="role" name="role" <?= $isSelf ? 'disabled' : '' ?>>
-                    <option value="queue_hr" <?= $formUser['role'] === 'queue_hr' ? 'selected' : '' ?>>พนักงานคุมคิว/HR</option>
-                    <option value="accounting" <?= $formUser['role'] === 'accounting' ? 'selected' : '' ?>>ฝ่ายบัญชี</option>
-                    <option value="admin" <?= $formUser['role'] === 'admin' ? 'selected' : '' ?>>ผู้ดูแลระบบ</option>
-                </select>
-                <?php if ($isSelf): ?><small class="text-muted">ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้</small><?php endif; ?>
-            </div>
-            <div class="form-group">
-                <label for="password"><?= $id ? 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)' : 'รหัสผ่าน *' ?></label>
-                <input type="password" id="password" name="password">
+        <div class="form-group">
+            <label for="password"><?= $id ? 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)' : 'รหัสผ่าน *' ?></label>
+            <input type="password" id="password" name="password" style="max-width:320px;">
+        </div>
+
+        <div class="form-group">
+            <label>สิทธิ์การใช้งาน</label>
+            <?php if ($isSelf): ?><div><small class="text-muted">ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้</small></div><?php endif; ?>
+            <div class="role-options">
+                <label class="role-option <?= $formUser['role'] === 'queue_hr' ? 'is-checked' : '' ?>">
+                    <input type="radio" name="role" value="queue_hr" <?= $formUser['role'] === 'queue_hr' ? 'checked' : '' ?> <?= $isSelf ? 'disabled' : '' ?>>
+                    <div>
+                        <strong>พนักงานคุมคิว/HR</strong>
+                        <p>จัดการคิวแคดดี้รายวัน ทะเบียนแคดดี้ การลา และการจองล่วงหน้า</p>
+                    </div>
+                </label>
+                <label class="role-option <?= $formUser['role'] === 'accounting' ? 'is-checked' : '' ?>">
+                    <input type="radio" name="role" value="accounting" <?= $formUser['role'] === 'accounting' ? 'checked' : '' ?> <?= $isSelf ? 'disabled' : '' ?>>
+                    <div>
+                        <strong>ฝ่ายบัญชี</strong>
+                        <p>เข้าถึงการปิดยอดค่าจ้างและรายงานสรุป</p>
+                    </div>
+                </label>
+                <label class="role-option <?= $formUser['role'] === 'admin' ? 'is-checked' : '' ?>">
+                    <input type="radio" name="role" value="admin" <?= $formUser['role'] === 'admin' ? 'checked' : '' ?> <?= $isSelf ? 'disabled' : '' ?>>
+                    <div>
+                        <strong>ผู้ดูแลระบบ</strong>
+                        <p>เข้าถึงได้ทุกส่วน รวมถึงจัดการผู้ใช้งานและอัตราค่าจ้าง</p>
+                    </div>
+                </label>
             </div>
         </div>
         <?php if (!$isSelf): ?>

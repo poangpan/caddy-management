@@ -1,0 +1,4 @@
+/uploads/caddies/*
+/uploads/users/*
+!/uploads/caddies/.gitkeep
+!/uploads/users/.gitkeep

@@ -62,8 +62,15 @@ function navActive(string $path, string $needle): string
         </nav>
         <div class="sidebar-footer">
             <div class="sidebar-user">
-                <strong><?= e($user['full_name']) ?></strong>
-                <span><?= e(roleLabel($user['role'])) ?></span>
+                <?php if (!empty($user['photo_path'])): ?>
+                    <img class="avatar avatar-sm" src="<?= BASE_URL ?>/<?= e($user['photo_path']) ?>" alt="">
+                <?php else: ?>
+                    <div class="avatar avatar-sm avatar-placeholder"><?= e(mb_substr($user['full_name'], 0, 1)) ?></div>
+                <?php endif; ?>
+                <div>
+                    <strong><?= e($user['full_name']) ?></strong>
+                    <span><?= e(roleLabel($user['role'])) ?></span>
+                </div>
             </div>
             <a href="<?= BASE_URL ?>/logout.php" class="btn-logout">ออกจากระบบ</a>
         </div>

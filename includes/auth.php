@@ -77,6 +77,7 @@ function publicUserFields(array $user): array
         'full_name' => $user['full_name'],
         'email' => $user['email'],
         'role' => $user['role'],
+        'photo_path' => $user['photo_path'] ?? null,
     ];
 }
 
@@ -88,6 +89,9 @@ function attemptLogin(PDO $pdo, string $email, string $password): ?string
     }
 
     $_SESSION['user'] = publicUserFields($result['user']);
+
+    $stmt = $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
+    $stmt->execute([$result['user']['id']]);
 
     return null; // no error
 }
