@@ -6,34 +6,23 @@ requireRole(['queue_hr', 'admin']);
 $pageTitle = 'จองแคดดี้ล่วงหน้า';
 $errors = [];
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
+    $cancelId = (int) $_POST['cancel_id'];
+    $pdo->prepare("DELETE FROM rounds WHERE id = ? AND status = 'scheduled'")->execute([$cancelId]);
+    setFlash('success', 'ยกเลิกการจองล่วงหน้าเรียบร้อย');
+    header('Location: ' . BASE_URL . '/bookings/create.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customerName = trim($_POST['customer_name'] ?? '');
     $holes = $_POST['holes'] ?? '';
     $scheduledAtRaw = $_POST['scheduled_at'] ?? '';
     $caddyId = (int) ($_POST['caddy_id'] ?? 0) ?: null;
 
-    if ($customerName === '') {
-        $errors[] = 'กรุณากรอกชื่อลูกค้า';
-    }
-    if (!in_array($holes, ['9', '18'], true)) {
-        $errors[] = 'กรุณาระบุจำนวนหลุม';
-    }
-    $scheduledAt = str_replace('T', ' ', $scheduledAtRaw);
-    if ($scheduledAtRaw === '' || strtotime($scheduledAt) === false) {
-        $errors[] = 'กรุณาระบุวันที่และเวลานัด';
-    } elseif (strtotime($scheduledAt) <= time()) {
-        $errors[] = 'เวลานัดต้องอยู่ในอนาคต';
-    }
-
-    if ($caddyId && empty($errors)) {
-        $stmt = $pdo->prepare(
-            'SELECT COUNT(*) FROM leave_requests WHERE caddy_id = ? AND ? BETWEEN start_date AND end_date'
-        );
-        $stmt->execute([$caddyId, substr($scheduledAt, 0, 10)]);
-        if ($stmt->fetchColumn() > 0) {
-            $errors[] = 'แคดดี้ที่เลือกแจ้งลาไว้ในวันที่นัดหมายนี้ กรุณาเลือกแคดดี้อื่นหรือไม่ระบุแคดดี้';
-        }
-    }
+    $validation = validateBookingInput($pdo, $customerName, $holes, $scheduledAtRaw, $caddyId);
+    $errors = $validation['errors'];
+    $scheduledAt = $validation['scheduled_at'];
 
     if (empty($errors)) {
         $pdo->prepare(
@@ -51,7 +40,7 @@ $caddies = $pdo->query('SELECT id, full_name FROM caddies WHERE is_active = 1 OR
 $leadMinutes = getAdvanceBookingLeadMinutes($pdo);
 
 $upcoming = $pdo->query(
-    "SELECT r.scheduled_at, r.customer_name, r.holes, c.full_name
+    "SELECT r.id, r.scheduled_at, r.customer_name, r.holes, c.full_name
      FROM rounds r
      LEFT JOIN caddies c ON c.id = r.caddy_id
      WHERE r.status = 'scheduled' AND r.scheduled_at >= NOW()
@@ -112,6 +101,7 @@ require __DIR__ . '/../includes/header.php';
             <th>ลูกค้า</th>
             <th>หลุม</th>
             <th>แคดดี้</th>
+            <th></th>
         </tr>
         <?php foreach ($upcoming as $b): ?>
         <tr>
@@ -119,6 +109,13 @@ require __DIR__ . '/../includes/header.php';
             <td><?= e($b['customer_name']) ?></td>
             <td><?= e($b['holes']) ?></td>
             <td><?= $b['full_name'] ? e($b['full_name']) : '-- ไม่ระบุ --' ?></td>
+            <td>
+                <a href="<?= BASE_URL ?>/bookings/edit.php?id=<?= $b['id'] ?>" class="btn btn-sm btn-secondary">แก้ไข</a>
+                <form method="post" style="display:inline;" onsubmit="return confirm('ยืนยันยกเลิกการจองนี้?');">
+                    <input type="hidden" name="cancel_id" value="<?= $b['id'] ?>">
+                    <button type="submit" class="btn btn-sm btn-danger">ยกเลิก</button>
+                </form>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

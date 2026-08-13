@@ -80,6 +80,39 @@ function fetchQueueBoard(PDO $pdo, int $leadMinutes): array
     return $stmt->fetchAll();
 }
 
+// ตรวจสอบข้อมูลการจองล่วงหน้า ใช้ร่วมกันทั้งตอนสร้างและแก้ไข
+// คืน ['errors' => array, 'scheduled_at' => string|null] — scheduled_at ถูกแปลงจากรูปแบบ datetime-local แล้ว
+function validateBookingInput(PDO $pdo, string $customerName, string $holes, string $scheduledAtRaw, ?int $caddyId): array
+{
+    $errors = [];
+
+    if ($customerName === '') {
+        $errors[] = 'กรุณากรอกชื่อลูกค้า';
+    }
+    if (!in_array($holes, ['9', '18'], true)) {
+        $errors[] = 'กรุณาระบุจำนวนหลุม';
+    }
+
+    $scheduledAt = str_replace('T', ' ', $scheduledAtRaw);
+    if ($scheduledAtRaw === '' || strtotime($scheduledAt) === false) {
+        $errors[] = 'กรุณาระบุวันที่และเวลานัด';
+    } elseif (strtotime($scheduledAt) <= time()) {
+        $errors[] = 'เวลานัดต้องอยู่ในอนาคต';
+    }
+
+    if ($caddyId && empty($errors)) {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM leave_requests WHERE caddy_id = ? AND ? BETWEEN start_date AND end_date'
+        );
+        $stmt->execute([$caddyId, substr($scheduledAt, 0, 10)]);
+        if ($stmt->fetchColumn() > 0) {
+            $errors[] = 'แคดดี้ที่เลือกแจ้งลาไว้ในวันที่นัดหมายนี้ กรุณาเลือกแคดดี้อื่นหรือไม่ระบุแคดดี้';
+        }
+    }
+
+    return ['errors' => $errors, 'scheduled_at' => $scheduledAt];
+}
+
 // รหัสแคดดี้สำหรับแสดงผล (ไม่ใช่ฟิลด์ในฐานข้อมูล) — สร้างจาก id เสมอ
 function formatCaddyCode(int $id): string
 {
