@@ -25,6 +25,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'เวลานัดต้องอยู่ในอนาคต';
     }
 
+    if ($caddyId && empty($errors)) {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM leave_requests WHERE caddy_id = ? AND ? BETWEEN start_date AND end_date'
+        );
+        $stmt->execute([$caddyId, substr($scheduledAt, 0, 10)]);
+        if ($stmt->fetchColumn() > 0) {
+            $errors[] = 'แคดดี้ที่เลือกแจ้งลาไว้ในวันที่นัดหมายนี้ กรุณาเลือกแคดดี้อื่นหรือไม่ระบุแคดดี้';
+        }
+    }
+
     if (empty($errors)) {
         $pdo->prepare(
             "INSERT INTO rounds (caddy_id, holes, customer_name, caddy_requested, status, scheduled_at)
