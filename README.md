@@ -22,13 +22,57 @@ The system is independent of the existing tee-time booking system and is **not e
 
 An optional **Android app** (native, distributed as a sideloaded APK, no Play Store) gives queue/HR staff the same queue/registry/leave data via REST API for use walking the course. It's a supplementary channel, not a replacement — the web UI for this role always remains fully functional on its own.
 
+## Requirements
+
+- PHP 8.0+ with the `pdo_mysql` extension
+- MySQL 5.7+ or MariaDB 10.3+
+
+## Setup
+
+### 1. Create the database
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 < database/schema.sql
+```
+
+This creates the `caddy_management` database, its tables, and a seed admin account.
+
+### 2. Configure the database connection
+
+Defaults live in `config/db.php`; override via environment variables for production:
+
+| Variable | Default |
+|----------|---------|
+| DB_HOST  | 127.0.0.1 |
+| DB_NAME  | caddy_management |
+| DB_USER  | root |
+| DB_PASS  | (empty) |
+
+### 3. Run it
+
+```bash
+php -S 0.0.0.0:8080
+```
+
+Then open `http://<host>:8080`. For production, point Apache/IIS at this folder as the document root.
+
+### 4. First login
+
+- Email: `admin@caddymanagement.local`
+- Password: `Admin@1234`
+
+Change this password immediately after first login, via "จัดการผู้ใช้งาน" (User management).
+
 ## Repo layout
 
 - **`.scratch/caddy-management/spec.md`** — full spec: problem statement, user stories, implementation decisions, testing decisions, and out-of-scope items.
+- **`config/`, `includes/`, `assets/`** — app bootstrap (DB connection, auth/session, shared layout, CSS)
+- **`database/schema.sql`** — baseline schema; incremental changes land under `database/migrations/`
+- **`users/`** — admin-only user account management
 - **`ref/`** — reference prototypes and design notes per feature area (advance booking, caddy directory, queue dashboard, payroll/accounting summary, fairway precision).
 - **`docs/agents/`** — configuration consumed by Claude Code agent skills (issue tracker, domain docs conventions).
 - **`CLAUDE.md`** — entry point for agent skill configuration.
 
 ## Status
 
-Spec and UI prototypes only — implementation hasn't started yet. Issues are tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
+Auth and user management (issue #1) implemented. Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
