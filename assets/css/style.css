@@ -215,9 +215,19 @@ tr:hover td { background: #f9f9f7; }
 .badge-info { background: #dbeafe; color: #1e40af; }
 .badge-danger { background: #fee2e2; color: #991b1b; }
 .badge-success { background: #dcfce7; color: #166534; }
+.badge-neutral { background: #ece9e2; color: var(--color-muted); }
+
+/* สถานะแคดดี้ในคิว — พื้นหลังโทนสี 15% ตัวอักษรเต็มสี ตาม design system */
+.badge-status-ready { background: rgba(16,185,129,0.15); color: var(--status-ready); }
+.badge-status-busy { background: rgba(245,158,11,0.15); color: var(--status-busy); }
+.badge-status-waiting { background: rgba(59,130,246,0.15); color: var(--status-waiting); }
+.badge-status-leave { background: rgba(100,116,139,0.15); color: var(--status-leave); }
 
 .alert { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; font-size: 14px; }
 .alert-success { background: #dcfce7; color: #166534; }
 .alert-error, .alert-danger { background: #fee2e2; color: #991b1b; }
 .alert-info { background: #dbeafe; color: #1e40af; }
 .alert-warning { background: #fef3c7; color: #92400e; }
+
+.status-form { display: flex; gap: 6px; align-items: center; }
+.status-form select { width: auto; padding: 5px 8px; font-size: 13px; }

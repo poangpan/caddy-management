@@ -25,6 +25,7 @@ $flash = getFlash();
     <nav class="topbar-nav" id="topbarNav">
         <a href="<?= BASE_URL ?>/dashboard.php">แดชบอร์ด</a>
         <?php if (isQueueHr() || isAdmin()): ?>
+            <a href="<?= BASE_URL ?>/queue/board.php">คิวแคดดี้</a>
             <a href="<?= BASE_URL ?>/caddies/list.php">ทะเบียนแคดดี้</a>
         <?php endif; ?>
         <?php if (isAdmin()): ?>
