@@ -45,11 +45,27 @@ if ($period) {
 }
 
 $grandTotal = array_sum(array_column($rows, 'total_wage'));
+$totalRounds = array_sum(array_column($rows, 'round_count'));
 
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
     <h1>ปิดยอดค่าจ้างรายสัปดาห์</h1>
+</div>
+
+<div class="stat-row">
+    <div class="stat-tile">
+        <div class="stat-tile-label">แคดดี้ที่มีรายได้</div>
+        <div class="stat-tile-value"><?= count($rows) ?></div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-tile-label">จำนวนรอบทั้งหมด</div>
+        <div class="stat-tile-value"><?= (int) $totalRounds ?></div>
+    </div>
+    <div class="stat-tile stat-tile--ready">
+        <div class="stat-tile-label">ยอดค่าจ้างรวม</div>
+        <div class="stat-tile-value"><?= e(number_format((float) $grandTotal, 2)) ?></div>
+    </div>
 </div>
 
 <?php foreach ($errors as $err): ?>

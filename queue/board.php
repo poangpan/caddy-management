@@ -63,11 +63,41 @@ $queue = $stmt->fetchAll();
 
 $seq = 0;
 
+$statusCounts = ['ready' => 0, 'on_round' => 0, 'waiting' => 0, 'leave' => 0];
+foreach ($queue as $row) {
+    if (isset($statusCounts[$row['status']])) {
+        $statusCounts[$row['status']]++;
+    }
+}
+
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
     <h1>คิวแคดดี้ (FIFO)</h1>
     <a href="<?= BASE_URL ?>/rounds/assign.php" class="btn btn-primary">+ มอบหมายออกรอบ</a>
+</div>
+
+<div class="stat-row">
+    <div class="stat-tile">
+        <div class="stat-tile-label">แคดดี้ทั้งหมด</div>
+        <div class="stat-tile-value"><?= count($queue) ?></div>
+    </div>
+    <div class="stat-tile stat-tile--ready">
+        <div class="stat-tile-label">พร้อมคิว</div>
+        <div class="stat-tile-value"><?= $statusCounts['ready'] ?></div>
+    </div>
+    <div class="stat-tile stat-tile--busy">
+        <div class="stat-tile-label">ออกรอบ</div>
+        <div class="stat-tile-value"><?= $statusCounts['on_round'] ?></div>
+    </div>
+    <div class="stat-tile stat-tile--waiting">
+        <div class="stat-tile-label">รอ</div>
+        <div class="stat-tile-value"><?= $statusCounts['waiting'] ?></div>
+    </div>
+    <div class="stat-tile stat-tile--leave">
+        <div class="stat-tile-label">ลา</div>
+        <div class="stat-tile-value"><?= $statusCounts['leave'] ?></div>
+    </div>
 </div>
 
 <div class="card">
