@@ -238,3 +238,14 @@ tr:hover td { background: #f9f9f7; }
 /* รอบปิดยอดที่ล็อกแล้ว — overlay สีเทาจางๆ ตาม design system */
 .payroll-locked { background: #f3f2ee; position: relative; }
 .payroll-locked table { opacity: 0.85; }
+
+.meta-table { width: 100%; margin: 8px 0; border-collapse: collapse; }
+.meta-table td { padding: 4px 0; vertical-align: top; border: none; }
+
+/* หน้าที่พิมพ์ได้ (เช่น สรุปรายการแคดดี้) — ซ่อนส่วนที่ไม่ต้องพิมพ์ (nav, ปุ่ม) */
+@media print {
+    .no-print, .topbar { display: none !important; }
+    .print-only { display: block !important; }
+    body { background: #fff; }
+    .container { padding: 0; max-width: none; }
+}

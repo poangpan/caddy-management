@@ -38,7 +38,10 @@ require __DIR__ . '/../includes/header.php';
                     <span class="badge badge-danger">พ้นสภาพ</span>
                 <?php endif; ?>
             </td>
-            <td><a href="<?= BASE_URL ?>/caddies/form.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-secondary">แก้ไข</a></td>
+            <td>
+                <a href="<?= BASE_URL ?>/caddies/form.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-secondary">แก้ไข</a>
+                <a href="<?= BASE_URL ?>/caddies/summary.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-secondary">สรุปรายการ</a>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>
