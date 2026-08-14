@@ -113,6 +113,26 @@ function validateBookingInput(PDO $pdo, string $customerName, string $holes, str
     return ['errors' => $errors, 'scheduled_at' => $scheduledAt];
 }
 
+// ตรวจสอบข้อมูลคำขอลา ใช้ร่วมกันทั้งตอนสร้างและแก้ไข
+function validateLeaveInput(int $caddyId, int $leaveTypeId, string $startDate, string $endDate): array
+{
+    $errors = [];
+
+    if (!$caddyId) {
+        $errors[] = 'กรุณาเลือกแคดดี้';
+    }
+    if (!$leaveTypeId) {
+        $errors[] = 'กรุณาเลือกประเภทการลา';
+    }
+    if ($startDate === '' || $endDate === '') {
+        $errors[] = 'กรุณาระบุช่วงวันที่ลา';
+    } elseif ($endDate < $startDate) {
+        $errors[] = 'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา';
+    }
+
+    return $errors;
+}
+
 // รหัสแคดดี้สำหรับแสดงผล (ไม่ใช่ฟิลด์ในฐานข้อมูล) — สร้างจาก id เสมอ
 function formatCaddyCode(int $id): string
 {
