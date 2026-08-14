@@ -101,10 +101,11 @@ php tests/payroll_close_test.php
 - **`tests/`** — dependency-free automated tests for high-risk logic (see Testing above)
 - **`Dockerfile`, `docker-compose.yml`** — containerized run (see Running with Docker above)
 - **`users/`** — admin-only user account management
+- **`reports/`** — cross-cutting operational reports (round volume, caddy request/ranking), separate from the per-purpose pages under `leave/` and `payroll/`
 - **`ref/`** — reference prototypes and design notes per feature area (advance booking, caddy directory, queue dashboard, payroll/accounting summary, fairway precision).
 - **`docs/agents/`** — configuration consumed by Claude Code agent skills (issue tracker, domain docs conventions).
 - **`CLAUDE.md`** — entry point for agent skill configuration.
 
 ## Status
 
-Issues #1–#8, #10, and #13–#16 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting, advance booking, payroll close-out, per-caddy summary, extended caddy profile fields, caddy check-out, booking flight/player count/VIP, round cart number), plus a sidebar-based UI restyle, profile photos/last-login tracking, caddy check-in, and edit/cancel for bookings and leave requests. Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
+Issues #1–#8, #10, and #13–#17 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting, advance booking, payroll close-out, per-caddy summary, extended caddy profile fields, caddy check-out, booking flight/player count/VIP, round cart number, operational reports), plus a sidebar-based UI restyle, profile photos/last-login tracking, caddy check-in, and edit/cancel for bookings and leave requests. Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.

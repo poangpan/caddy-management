@@ -14,6 +14,7 @@ $navIcons = [
     'wage'      => '<path d="M12 3v18M8 7h5.5a2.5 2.5 0 0 1 0 5H9a2.5 2.5 0 0 0 0 5H16" stroke-linecap="round"/>',
     'users'     => '<path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 9v-1.2A4.8 4.8 0 0 1 8.8 14h.4A4.8 4.8 0 0 1 14 18.8V20M17 8a2 2 0 1 0 0-4M16 14a3.5 3.5 0 0 1 4 3.46V20" stroke-linecap="round"/>',
     'checkin'   => '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 7v5l3.5 2" stroke-linecap="round" stroke-linejoin="round"/>',
+    'reports'   => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke-linecap="round" stroke-linejoin="round"/>',
 ];
 
 function navIcon(array $icons, string $key): string
@@ -53,6 +54,7 @@ function navActive(string $path, string $needle): string
                 <a class="<?= navActive($currentPath, '/caddies/') ?>" href="<?= BASE_URL ?>/caddies/list.php"><?= navIcon($navIcons, 'caddies') ?><span>ทะเบียนแคดดี้</span></a>
                 <a class="<?= navActive($currentPath, '/leave/') ?>" href="<?= BASE_URL ?>/leave/index.php"><?= navIcon($navIcons, 'leave') ?><span>การลา</span></a>
                 <a class="<?= navActive($currentPath, '/bookings/') ?>" href="<?= BASE_URL ?>/bookings/create.php"><?= navIcon($navIcons, 'booking') ?><span>จองแคดดี้ล่วงหน้า</span></a>
+                <a class="<?= navActive($currentPath, '/reports/') ?>" href="<?= BASE_URL ?>/reports/operations.php"><?= navIcon($navIcons, 'reports') ?><span>รายงานการดำเนินงาน</span></a>
             <?php endif; ?>
             <?php if (isAccounting() || isAdmin()): ?>
                 <a class="<?= navActive($currentPath, '/payroll/') ?>" href="<?= BASE_URL ?>/payroll/index.php"><?= navIcon($navIcons, 'payroll') ?><span>ปิดยอดค่าจ้าง</span></a>
