@@ -9,20 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $caddyId = (int) ($_POST['caddy_id'] ?? 0);
     $newStatus = $_POST['status'] ?? '';
 
-    if ($caddyId && in_array($newStatus, $statuses, true)) {
-        if ($newStatus === 'ready') {
-            $stmt = $pdo->prepare(
-                'INSERT INTO caddy_queue_status (caddy_id, status, last_ready_at) VALUES (?, ?, NOW())
-                 ON DUPLICATE KEY UPDATE status = ?, last_ready_at = NOW()'
-            );
-            $stmt->execute([$caddyId, $newStatus, $newStatus]);
-        } else {
-            $stmt = $pdo->prepare(
-                'INSERT INTO caddy_queue_status (caddy_id, status) VALUES (?, ?)
-                 ON DUPLICATE KEY UPDATE status = ?'
-            );
-            $stmt->execute([$caddyId, $newStatus, $newStatus]);
-        }
+    if ($caddyId && setCaddyQueueStatus($pdo, $caddyId, $newStatus)) {
         setFlash('success', 'ปรับสถานะแคดดี้เรียบร้อย');
     }
     header('Location: ' . BASE_URL . '/queue/board.php');

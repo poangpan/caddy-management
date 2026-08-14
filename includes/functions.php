@@ -179,6 +179,30 @@ function ratingAverage(?array $ratingRow): ?float
     return round($sum / count($dimensions), 1);
 }
 
+// ปรับสถานะแคดดี้ในคิว ใช้ร่วมกันทั้งหน้าเว็บ (queue/board.php) และ REST API (ตั๋ว #11)
+// คืน false ถ้า status ไม่ถูกต้อง (ไม่ทำอะไรกับฐานข้อมูล) — ผู้เรียกต้องตรวจสอบ caddyId ว่ามีอยู่จริงเอง
+function setCaddyQueueStatus(PDO $pdo, int $caddyId, string $status): bool
+{
+    if (!in_array($status, ['ready', 'on_round', 'waiting', 'leave'], true)) {
+        return false;
+    }
+
+    if ($status === 'ready') {
+        $stmt = $pdo->prepare(
+            'INSERT INTO caddy_queue_status (caddy_id, status, last_ready_at) VALUES (?, ?, NOW())
+             ON DUPLICATE KEY UPDATE status = ?, last_ready_at = NOW()'
+        );
+    } else {
+        $stmt = $pdo->prepare(
+            'INSERT INTO caddy_queue_status (caddy_id, status) VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE status = ?'
+        );
+    }
+    $stmt->execute([$caddyId, $status, $status]);
+
+    return true;
+}
+
 // รหัสแคดดี้สำหรับแสดงผล (ไม่ใช่ฟิลด์ในฐานข้อมูล) — สร้างจาก id เสมอ
 function formatCaddyCode(int $id): string
 {

@@ -1,0 +1,5 @@
+# PHP บาง SAPI (รวมถึง mod_php ของ Apache) ไม่ส่ง Authorization header เข้า $_SERVER['HTTP_AUTHORIZATION'] ให้อัตโนมัติ
+# กฎนี้คัดลอกมันเข้าไปเอง — จำเป็นสำหรับ REST API แบบ token auth (ตั๋ว #11, ดู includes/api_auth.php)
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
