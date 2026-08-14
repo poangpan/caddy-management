@@ -6,6 +6,15 @@ requireRole(['queue_hr', 'admin']);
 // "ลงเวลาแล้ว" นับจากวันที่ของ last_ready_at เทียบกับ CURDATE() ของฐานข้อมูล (ไม่ใช้เวลาของ PHP เพื่อกันเวลาไม่ตรงกัน)
 // เป็นคนละกลไกกับการปรับสถานะทั่วไปในหน้าคิว (queue/board.php) ซึ่งยังปรับกลับเป็น "พร้อม" ได้ไม่จำกัดตลอดวัน
 // (เช่น แคดดี้กลับจากออกรอบ) — ข้อจำกัดนี้คุมเฉพาะปุ่ม "ลงเวลาเข้างาน" ไม่ให้กดซ้ำในวันเดียวกัน
+// เลิกงาน (check-out): ลบแถวสถานะคิวออกทั้งแถว — ทำให้ (1) แคดดี้ไม่นับเป็น "พร้อม" ในคิว FIFO อีกต่อไป
+// และ (2) last_ready_at หายไปด้วย จึงเปิดให้ลงเวลาเข้างานใหม่ได้ในวันเดียวกันถ้ากลับเข้ากะอีกครั้ง (ต่างจากลงเวลาซ้ำโดยไม่ได้เลิกงานก่อน ซึ่งยังถูกกันอยู่)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout_id'])) {
+    $pdo->prepare('DELETE FROM caddy_queue_status WHERE caddy_id = ?')->execute([(int) $_POST['checkout_id']]);
+    setFlash('success', 'บันทึกเลิกงานเรียบร้อย');
+    header('Location: ' . BASE_URL . '/queue/checkin.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $caddyId = (int) ($_POST['caddy_id'] ?? 0);
     if ($caddyId) {
@@ -92,6 +101,10 @@ require __DIR__ . '/../includes/header.php';
             <td>
                 <?php if ($row['checked_in_today']): ?>
                     <span class="badge badge-neutral">ลงเวลาแล้ววันนี้</span>
+                    <form method="post" style="display:inline;" onsubmit="return confirm('ยืนยันเลิกงานสำหรับ <?= e($row['full_name']) ?>?');">
+                        <input type="hidden" name="checkout_id" value="<?= $row['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-danger">เลิกงาน</button>
+                    </form>
                 <?php else: ?>
                     <form method="post">
                         <input type="hidden" name="caddy_id" value="<?= $row['id'] ?>">
