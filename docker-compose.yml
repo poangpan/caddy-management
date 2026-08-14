@@ -9,11 +9,23 @@ services:
       DB_USER: root
       DB_PASS: rootpass
       TZ: Asia/Bangkok
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: noreply@caddymanagement.local
     volumes:
       - ./:/var/www/html
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  # ตัวดักอีเมลสำหรับพัฒนา/ทดสอบเท่านั้น (ตั๋ว #21) — ไม่ส่งอีเมลจริงออกอินเทอร์เน็ต ดูอีเมลที่ "ส่ง" แล้วได้ที่ http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   db:
     image: mariadb:10.11

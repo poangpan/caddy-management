@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/notifications.php';
 requireRole(['queue_hr', 'admin']);
 
 $pageTitle = 'การลา';
@@ -14,16 +15,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_id'])) {
-    $pdo->prepare("UPDATE leave_requests SET status = 'approved' WHERE id = ? AND status = 'pending'")
-        ->execute([(int) $_POST['approve_id']]);
+    $approveId = (int) $_POST['approve_id'];
+    $stmt = $pdo->prepare("UPDATE leave_requests SET status = 'approved' WHERE id = ? AND status = 'pending'");
+    $stmt->execute([$approveId]);
+    if ($stmt->rowCount() > 0) {
+        notifyLeaveDecision($pdo, $approveId, 'approved', currentUser()['id'] ?? null);
+    }
     setFlash('success', 'อนุมัติคำขอลาเรียบร้อย');
     header('Location: ' . BASE_URL . '/leave/index.php');
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_id'])) {
-    $pdo->prepare("UPDATE leave_requests SET status = 'rejected' WHERE id = ? AND status = 'pending'")
-        ->execute([(int) $_POST['reject_id']]);
+    $rejectId = (int) $_POST['reject_id'];
+    $stmt = $pdo->prepare("UPDATE leave_requests SET status = 'rejected' WHERE id = ? AND status = 'pending'");
+    $stmt->execute([$rejectId]);
+    if ($stmt->rowCount() > 0) {
+        notifyLeaveDecision($pdo, $rejectId, 'rejected', currentUser()['id'] ?? null);
+    }
     setFlash('success', 'ไม่อนุมัติคำขอลาเรียบร้อย');
     header('Location: ' . BASE_URL . '/leave/index.php');
     exit;
