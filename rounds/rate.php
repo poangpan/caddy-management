@@ -115,8 +115,8 @@ require __DIR__ . '/../includes/header.php';
             <textarea id="comment" name="comment"><?= e($rating['comment'] ?? '') ?></textarea>
         </div>
         <button type="submit" class="btn btn-primary">
-            <?php if ($nextAction === 'checkout'): ?>บันทึกคะแนนและเลิกงาน
-            <?php elseif ($nextAction === 'ready'): ?>บันทึกคะแนนและพร้อมออกรอบต่อ
+            <?php if ($nextAction === 'checkout'): ?>บันทึกคะแนนและจบ
+            <?php elseif ($nextAction === 'ready'): ?>บันทึกคะแนนและต่อคิว
             <?php else: ?>บันทึกคะแนน
             <?php endif; ?>
         </button>
