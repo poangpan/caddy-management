@@ -29,6 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "INSERT INTO caddy_queue_status (caddy_id, status, last_ready_at) VALUES (?, 'ready', NOW())
                  ON DUPLICATE KEY UPDATE status = 'ready', last_ready_at = NOW()"
             )->execute([$caddyId]);
+            // สะสมประวัติวันที่เข้างานแยกไว้ต่างหาก (ตั๋ว #23) — last_ready_at ข้างบนถูกทับทุกวัน ไม่มีประวัติสะสม
+            $pdo->prepare(
+                "INSERT INTO attendance_log (caddy_id, work_date, checked_in_at) VALUES (?, CURDATE(), NOW())
+                 ON DUPLICATE KEY UPDATE checked_in_at = NOW()"
+            )->execute([$caddyId]);
             setFlash('success', 'ลงเวลาเข้างานเรียบร้อย — เข้าคิวตามเวลานี้');
         }
     }
