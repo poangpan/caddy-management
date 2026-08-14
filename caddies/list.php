@@ -212,6 +212,9 @@ require __DIR__ . '/../includes/header.php';
             <a href="<?= BASE_URL ?>/caddies/form.php?id=<?= $selected['id'] ?>" class="btn btn-secondary btn-block">แก้ไขข้อมูล</a>
             <a href="<?= BASE_URL ?>/caddies/summary.php?id=<?= $selected['id'] ?>" class="btn btn-primary btn-block">ดูสรุปรายการทั้งหมด</a>
         </div>
+        <div class="form-row" style="margin-top:8px;">
+            <a href="<?= BASE_URL ?>/caddies/credentials.php?id=<?= $selected['id'] ?>" class="btn btn-secondary btn-block">บัญชีพอร์ทัลแคดดี้</a>
+        </div>
     </div>
     <?php endif; ?>
 </div>
