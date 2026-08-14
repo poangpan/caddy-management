@@ -35,6 +35,7 @@ services:
       - ./database/migrations/006_advance_booking.sql:/docker-entrypoint-initdb.d/006_advance_booking.sql:ro
       - ./database/migrations/007_payroll.sql:/docker-entrypoint-initdb.d/007_payroll.sql:ro
       - ./database/migrations/008_profiles.sql:/docker-entrypoint-initdb.d/008_profiles.sql:ro
+      - ./database/migrations/009_caddy_profile.sql:/docker-entrypoint-initdb.d/009_caddy_profile.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
       interval: 5s

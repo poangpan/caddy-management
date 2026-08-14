@@ -107,4 +107,4 @@ php tests/payroll_close_test.php
 
 ## Status
 
-Issues #1–#8 and #10 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting, advance booking, payroll close-out, per-caddy summary), plus a sidebar-based UI restyle and profile photos/last-login tracking for caddies and users (see `ref/`). Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.
+Issues #1–#8, #10, and #13 implemented (auth, caddy registry, FIFO queue, round assignment, wage calculation, leave requests & reporting, advance booking, payroll close-out, per-caddy summary, extended caddy profile fields), plus a sidebar-based UI restyle, profile photos/last-login tracking, caddy check-in, and edit/cancel for bookings and leave requests. Remaining tickets tracked on this repo's [Issues](https://github.com/poangpan/caddy-management/issues) page.

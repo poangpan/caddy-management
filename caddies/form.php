@@ -5,7 +5,11 @@ requireRole(['queue_hr', 'admin']);
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 
-$caddy = ['full_name' => '', 'phone' => '', 'national_id' => '', 'bank_account_number' => '', 'start_date' => '', 'is_active' => 1, 'photo_path' => null];
+$caddy = [
+    'full_name' => '', 'phone' => '', 'national_id' => '', 'bank_account_number' => '', 'start_date' => '',
+    'is_active' => 1, 'photo_path' => null,
+    'address' => '', 'caddy_type' => '', 'skill_class' => '', 'languages' => '', 'certifications' => '',
+];
 $errors = [];
 
 if ($id) {
@@ -28,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $caddy['national_id'] = trim($_POST['national_id'] ?? '');
     $caddy['bank_account_number'] = trim($_POST['bank_account_number'] ?? '');
     $caddy['start_date'] = $_POST['start_date'] ?? '' ?: null;
+    $caddy['address'] = trim($_POST['address'] ?? '');
+    $caddy['caddy_type'] = trim($_POST['caddy_type'] ?? '');
+    $caddy['skill_class'] = in_array($_POST['skill_class'] ?? '', ['A', 'B', 'C'], true) ? $_POST['skill_class'] : null;
+    $caddy['languages'] = trim($_POST['languages'] ?? '');
+    $caddy['certifications'] = trim($_POST['certifications'] ?? '');
     // สถานะทำงาน/พ้นสภาพ ปรับได้เฉพาะผู้ดูแลระบบ; แคดดี้ใหม่เริ่มเป็นสถานะทำงานอยู่เสมอ
     $caddy['is_active'] = isAdmin() ? (isset($_POST['is_active']) ? 1 : 0) : 1;
 
@@ -48,12 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         if ($id) {
-            $stmt = $pdo->prepare('UPDATE caddies SET full_name = ?, photo_path = ?, phone = ?, national_id = ?, bank_account_number = ?, start_date = ?, is_active = ? WHERE id = ?');
-            $stmt->execute([$caddy['full_name'], $caddy['photo_path'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date'], $caddy['is_active'], $id]);
+            $stmt = $pdo->prepare(
+                'UPDATE caddies SET full_name = ?, photo_path = ?, phone = ?, national_id = ?, bank_account_number = ?, start_date = ?,
+                 address = ?, caddy_type = ?, skill_class = ?, languages = ?, certifications = ?, is_active = ? WHERE id = ?'
+            );
+            $stmt->execute([
+                $caddy['full_name'], $caddy['photo_path'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date'],
+                $caddy['address'] ?: null, $caddy['caddy_type'] ?: null, $caddy['skill_class'], $caddy['languages'] ?: null, $caddy['certifications'] ?: null,
+                $caddy['is_active'], $id,
+            ]);
             setFlash('success', 'บันทึกการแก้ไขข้อมูลแคดดี้เรียบร้อย');
         } else {
-            $stmt = $pdo->prepare('INSERT INTO caddies (full_name, photo_path, phone, national_id, bank_account_number, start_date, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)');
-            $stmt->execute([$caddy['full_name'], $caddy['photo_path'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date']]);
+            $stmt = $pdo->prepare(
+                'INSERT INTO caddies (full_name, photo_path, phone, national_id, bank_account_number, start_date, address, caddy_type, skill_class, languages, certifications, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)'
+            );
+            $stmt->execute([
+                $caddy['full_name'], $caddy['photo_path'], $caddy['phone'], $caddy['national_id'], $caddy['bank_account_number'], $caddy['start_date'],
+                $caddy['address'] ?: null, $caddy['caddy_type'] ?: null, $caddy['skill_class'], $caddy['languages'] ?: null, $caddy['certifications'] ?: null,
+            ]);
             setFlash('success', 'เพิ่มแคดดี้เรียบร้อย');
         }
         header('Location: ' . BASE_URL . '/caddies/list.php');
@@ -106,6 +128,35 @@ require __DIR__ . '/../includes/header.php';
             <div class="form-group">
                 <label for="start_date">วันที่เริ่มงาน</label>
                 <input type="date" id="start_date" name="start_date" value="<?= e($caddy['start_date']) ?>">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="address">ที่อยู่</label>
+            <input type="text" id="address" name="address" value="<?= e($caddy['address']) ?>">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="caddy_type">ประเภทแคดดี้</label>
+                <input type="text" id="caddy_type" name="caddy_type" value="<?= e($caddy['caddy_type']) ?>">
+            </div>
+            <div class="form-group">
+                <label for="skill_class">ระดับฝีมือ</label>
+                <select id="skill_class" name="skill_class">
+                    <option value="">-- ไม่ระบุ --</option>
+                    <option value="A" <?= $caddy['skill_class'] === 'A' ? 'selected' : '' ?>>A</option>
+                    <option value="B" <?= $caddy['skill_class'] === 'B' ? 'selected' : '' ?>>B</option>
+                    <option value="C" <?= $caddy['skill_class'] === 'C' ? 'selected' : '' ?>>C</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="languages">ภาษา</label>
+                <input type="text" id="languages" name="languages" value="<?= e($caddy['languages']) ?>" placeholder="เช่น ไทย, อังกฤษ">
+            </div>
+            <div class="form-group">
+                <label for="certifications">ใบรับรอง</label>
+                <input type="text" id="certifications" name="certifications" value="<?= e($caddy['certifications']) ?>">
             </div>
         </div>
         <?php if ($id): ?>

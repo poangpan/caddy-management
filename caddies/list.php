@@ -95,6 +95,7 @@ require __DIR__ . '/../includes/header.php';
                 <th>ชื่อ-นามสกุล</th>
                 <th>เบอร์โทร</th>
                 <th>วันที่เริ่มงาน</th>
+                <th>ระดับฝีมือ</th>
                 <th>สถานะ</th>
                 <th></th>
             </tr>
@@ -114,6 +115,13 @@ require __DIR__ . '/../includes/header.php';
                 <td class="font-mono"><?= e($c['phone']) ?: '-' ?></td>
                 <td><?= e($c['start_date']) ?: '-' ?></td>
                 <td>
+                    <?php if ($c['skill_class']): ?>
+                        <span class="badge badge-info"><?= e($c['skill_class']) ?></span>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </td>
+                <td>
                     <?php if ($c['is_active']): ?>
                         <span class="badge badge-success">ทำงานอยู่</span>
                     <?php else: ?>
@@ -127,7 +135,7 @@ require __DIR__ . '/../includes/header.php';
             </tr>
             <?php endforeach; ?>
             <?php if (!$caddies): ?>
-            <tr><td colspan="6" class="text-muted">ไม่มีแคดดี้ในรายการนี้</td></tr>
+            <tr><td colspan="7" class="text-muted">ไม่มีแคดดี้ในรายการนี้</td></tr>
             <?php endif; ?>
         </table>
     </div>
@@ -154,6 +162,20 @@ require __DIR__ . '/../includes/header.php';
                 <div class="stat-tile-value" style="font-size:18px;"><?= e(number_format($monthWage, 2)) ?></div>
             </div>
         </div>
+
+        <table class="meta-table" style="margin-bottom:16px;">
+            <tr>
+                <td width="50%"><strong>ประเภทแคดดี้:</strong> <?= e($selected['caddy_type']) ?: '-' ?></td>
+                <td width="50%"><strong>ระดับฝีมือ:</strong> <?= e($selected['skill_class']) ?: '-' ?></td>
+            </tr>
+            <tr>
+                <td><strong>ภาษา:</strong> <?= e($selected['languages']) ?: '-' ?></td>
+                <td><strong>ใบรับรอง:</strong> <?= e($selected['certifications']) ?: '-' ?></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>ที่อยู่:</strong> <?= e($selected['address']) ?: '-' ?></td>
+            </tr>
+        </table>
 
         <p class="text-muted" style="text-transform:uppercase; font-size:12px; margin-bottom:6px;">การลาล่าสุด</p>
         <?php if ($recentLeave): ?>
