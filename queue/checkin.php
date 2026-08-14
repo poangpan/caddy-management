@@ -3,15 +3,25 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 requireRole(['queue_hr', 'admin']);
 
+// "ลงเวลาแล้ว" นับจากวันที่ของ last_ready_at เทียบกับ CURDATE() ของฐานข้อมูล (ไม่ใช้เวลาของ PHP เพื่อกันเวลาไม่ตรงกัน)
+// เป็นคนละกลไกกับการปรับสถานะทั่วไปในหน้าคิว (queue/board.php) ซึ่งยังปรับกลับเป็น "พร้อม" ได้ไม่จำกัดตลอดวัน
+// (เช่น แคดดี้กลับจากออกรอบ) — ข้อจำกัดนี้คุมเฉพาะปุ่ม "ลงเวลาเข้างาน" ไม่ให้กดซ้ำในวันเดียวกัน
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $caddyId = (int) ($_POST['caddy_id'] ?? 0);
     if ($caddyId) {
         $stmt = $pdo->prepare(
-            "INSERT INTO caddy_queue_status (caddy_id, status, last_ready_at) VALUES (?, 'ready', NOW())
-             ON DUPLICATE KEY UPDATE status = 'ready', last_ready_at = NOW()"
+            "SELECT 1 FROM caddy_queue_status WHERE caddy_id = ? AND DATE(last_ready_at) = CURDATE()"
         );
         $stmt->execute([$caddyId]);
-        setFlash('success', 'ลงเวลาเข้างานเรียบร้อย — เข้าคิวตามเวลานี้');
+        if ($stmt->fetchColumn()) {
+            setFlash('error', 'แคดดี้คนนี้ลงเวลาเข้างานไปแล้ววันนี้ ลงเวลาซ้ำได้ในวันถัดไป');
+        } else {
+            $pdo->prepare(
+                "INSERT INTO caddy_queue_status (caddy_id, status, last_ready_at) VALUES (?, 'ready', NOW())
+                 ON DUPLICATE KEY UPDATE status = 'ready', last_ready_at = NOW()"
+            )->execute([$caddyId]);
+            setFlash('success', 'ลงเวลาเข้างานเรียบร้อย — เข้าคิวตามเวลานี้');
+        }
     }
     header('Location: ' . BASE_URL . '/queue/checkin.php');
     exit;
@@ -25,11 +35,17 @@ if (!in_array($filter, ['all', 'pending', 'checked_in'], true)) {
 
 $leadMinutes = getAdvanceBookingLeadMinutes($pdo);
 $queue = fetchQueueBoard($pdo, $leadMinutes);
+$today = $pdo->query('SELECT CURDATE()')->fetchColumn();
+
+foreach ($queue as &$row) {
+    $row['checked_in_today'] = $row['last_ready_at'] !== null && substr($row['last_ready_at'], 0, 10) === $today;
+}
+unset($row);
 
 $pendingCount = 0;
 $checkedInCount = 0;
 foreach ($queue as $row) {
-    if ($row['raw_status'] === 'ready') {
+    if ($row['checked_in_today']) {
         $checkedInCount++;
     } else {
         $pendingCount++;
@@ -38,10 +54,10 @@ foreach ($queue as $row) {
 
 $rows = array_filter($queue, function ($row) use ($filter) {
     if ($filter === 'pending') {
-        return $row['raw_status'] !== 'ready';
+        return !$row['checked_in_today'];
     }
     if ($filter === 'checked_in') {
-        return $row['raw_status'] === 'ready';
+        return $row['checked_in_today'];
     }
     return true;
 });
@@ -52,7 +68,7 @@ require __DIR__ . '/../includes/header.php';
     <h1>ลงเวลาเข้างาน</h1>
 </div>
 
-<p class="text-muted" style="margin-top:-8px;">กดลงเวลาเมื่อแคดดี้มาถึงที่ทำงาน ระบบจะนำเข้าคิว FIFO ตามเวลานี้ทันที (ใช้ได้ไม่ว่าสถานะก่อนหน้าจะเป็นอะไร)</p>
+<p class="text-muted" style="margin-top:-8px;">กดลงเวลาเมื่อแคดดี้มาถึงที่ทำงาน ระบบจะนำเข้าคิว FIFO ตามเวลานี้ทันที — ลงเวลาได้วันละครั้งต่อคน หากต้องปรับสถานะระหว่างวัน (เช่น กลับจากออกรอบ) ให้ใช้หน้าคิวแคดดี้แทน</p>
 
 <div class="filter-tabs">
     <a href="<?= BASE_URL ?>/queue/checkin.php?filter=all" class="filter-tab <?= $filter === 'all' ? 'is-active' : '' ?>">ทั้งหมด (<?= count($queue) ?>)</a>
@@ -74,10 +90,14 @@ require __DIR__ . '/../includes/header.php';
             <td><span class="badge <?= e(queueStatusBadgeClass($row['status'])) ?>"><?= e(queueStatusLabel($row['status'])) ?></span></td>
             <td class="font-mono text-muted"><?= e($row['last_ready_at']) ?: '-' ?></td>
             <td>
-                <form method="post">
-                    <input type="hidden" name="caddy_id" value="<?= $row['id'] ?>">
-                    <button type="submit" class="btn btn-sm btn-primary">ลงเวลาเข้างาน</button>
-                </form>
+                <?php if ($row['checked_in_today']): ?>
+                    <span class="badge badge-neutral">ลงเวลาแล้ววันนี้</span>
+                <?php else: ?>
+                    <form method="post">
+                        <input type="hidden" name="caddy_id" value="<?= $row['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-primary">ลงเวลาเข้างาน</button>
+                    </form>
+                <?php endif; ?>
             </td>
         </tr>
         <?php endforeach; ?>
