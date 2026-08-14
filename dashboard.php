@@ -18,7 +18,7 @@ if (isQueueHr() || isAdmin()) {
             $readyQueue[] = $row;
         } elseif ($row['status'] === 'on_round') {
             $stmt = $pdo->prepare(
-                "SELECT customer_name, holes, assigned_at FROM rounds
+                "SELECT id, customer_name, holes, assigned_at FROM rounds
                  WHERE caddy_id = ? AND status = 'in_progress'
                  ORDER BY assigned_at DESC LIMIT 1"
             );
@@ -71,6 +71,7 @@ require __DIR__ . '/includes/header.php';
                 <th>ลูกค้า</th>
                 <th>หลุม</th>
                 <th>เวลาออกรอบ</th>
+                <th></th>
             </tr>
             <?php foreach ($onRoundQueue as $row): ?>
             <tr>
@@ -78,10 +79,18 @@ require __DIR__ . '/includes/header.php';
                 <td><?= $row['round'] ? e($row['round']['customer_name']) : '-' ?></td>
                 <td><?= $row['round'] ? e($row['round']['holes']) : '-' ?></td>
                 <td class="font-mono text-muted"><?= $row['round'] ? e($row['round']['assigned_at']) : '-' ?></td>
+                <td>
+                    <?php if ($row['round']): ?>
+                        <a href="<?= BASE_URL ?>/rounds/rate.php?round_id=<?= $row['round']['id'] ?>&next_action=checkout" class="btn btn-sm btn-danger">เสร็จแล้ว</a>
+                        <a href="<?= BASE_URL ?>/rounds/rate.php?round_id=<?= $row['round']['id'] ?>&next_action=ready" class="btn btn-sm btn-primary">พร้อมออกรอบต่อ</a>
+                    <?php else: ?>
+                        <span class="text-muted">-</span>
+                    <?php endif; ?>
+                </td>
             </tr>
             <?php endforeach; ?>
             <?php if (!$onRoundQueue): ?>
-            <tr><td colspan="4" class="text-muted">ไม่มีแคดดี้ออกรอบอยู่ตอนนี้</td></tr>
+            <tr><td colspan="5" class="text-muted">ไม่มีแคดดี้ออกรอบอยู่ตอนนี้</td></tr>
             <?php endif; ?>
         </table>
     </div>
