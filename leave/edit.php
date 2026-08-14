@@ -33,10 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $leave['note'] = $note;
 
     if (empty($errors)) {
+        // แก้ไขแล้วต้องกลับไปรออนุมัติใหม่เสมอ เพราะการอนุมัติเดิมอ้างอิงข้อมูลก่อนแก้ไข
         $pdo->prepare(
-            'UPDATE leave_requests SET caddy_id = ?, leave_type_id = ?, start_date = ?, end_date = ?, note = ? WHERE id = ?'
+            "UPDATE leave_requests SET caddy_id = ?, leave_type_id = ?, start_date = ?, end_date = ?, note = ?, status = 'pending' WHERE id = ?"
         )->execute([$caddyId, $leaveTypeId, $startDate, $endDate, $note !== '' ? $note : null, $id]);
-        setFlash('success', 'บันทึกการแก้ไขคำขอลาเรียบร้อย');
+        setFlash('success', 'บันทึกการแก้ไขคำขอลาเรียบร้อย รอการอนุมัติใหม่อีกครั้ง');
         header('Location: ' . BASE_URL . '/leave/index.php');
         exit;
     }

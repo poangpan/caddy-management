@@ -13,6 +13,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_id'])) {
+    $pdo->prepare("UPDATE leave_requests SET status = 'approved' WHERE id = ? AND status = 'pending'")
+        ->execute([(int) $_POST['approve_id']]);
+    setFlash('success', 'อนุมัติคำขอลาเรียบร้อย');
+    header('Location: ' . BASE_URL . '/leave/index.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_id'])) {
+    $pdo->prepare("UPDATE leave_requests SET status = 'rejected' WHERE id = ? AND status = 'pending'")
+        ->execute([(int) $_POST['reject_id']]);
+    setFlash('success', 'ไม่อนุมัติคำขอลาเรียบร้อย');
+    header('Location: ' . BASE_URL . '/leave/index.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $caddyId = (int) ($_POST['caddy_id'] ?? 0);
     $leaveTypeId = (int) ($_POST['leave_type_id'] ?? 0);
@@ -23,9 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = validateLeaveInput($caddyId, $leaveTypeId, $startDate, $endDate);
 
     if (empty($errors)) {
-        $pdo->prepare('INSERT INTO leave_requests (caddy_id, leave_type_id, start_date, end_date, note) VALUES (?, ?, ?, ?, ?)')
+        $pdo->prepare("INSERT INTO leave_requests (caddy_id, leave_type_id, start_date, end_date, note, status) VALUES (?, ?, ?, ?, ?, 'pending')")
             ->execute([$caddyId, $leaveTypeId, $startDate, $endDate, $note !== '' ? $note : null]);
-        setFlash('success', 'บันทึกคำขอลาเรียบร้อย');
+        setFlash('success', 'บันทึกคำขอลาเรียบร้อย รอการอนุมัติ');
         header('Location: ' . BASE_URL . '/leave/index.php');
         exit;
     }
@@ -35,7 +51,7 @@ $caddies = $pdo->query('SELECT id, full_name FROM caddies WHERE is_active = 1 OR
 $leaveTypes = $pdo->query('SELECT id, name FROM leave_types ORDER BY id')->fetchAll();
 
 $upcoming = $pdo->query(
-    "SELECT lr.id, lr.start_date, lr.end_date, lr.note, c.full_name, lt.name AS type_name
+    "SELECT lr.id, lr.start_date, lr.end_date, lr.note, lr.status, c.full_name, lt.name AS type_name
      FROM leave_requests lr
      JOIN caddies c ON c.id = lr.caddy_id
      JOIN leave_types lt ON lt.id = lr.leave_type_id
@@ -101,6 +117,7 @@ require __DIR__ . '/../includes/header.php';
             <th>ประเภท</th>
             <th>ช่วงวันที่ลา</th>
             <th>หมายเหตุ</th>
+            <th>สถานะ</th>
             <th></th>
         </tr>
         <?php foreach ($upcoming as $u): ?>
@@ -109,7 +126,18 @@ require __DIR__ . '/../includes/header.php';
             <td><?= e($u['type_name']) ?></td>
             <td class="font-mono"><?= e($u['start_date']) ?> — <?= e($u['end_date']) ?></td>
             <td><?= e($u['note']) ?></td>
+            <td><span class="badge <?= leaveStatusBadgeClass($u['status']) ?>"><?= e(leaveStatusLabel($u['status'])) ?></span></td>
             <td>
+                <?php if ($u['status'] === 'pending'): ?>
+                    <form method="post" style="display:inline;">
+                        <input type="hidden" name="approve_id" value="<?= $u['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-success">อนุมัติ</button>
+                    </form>
+                    <form method="post" style="display:inline;" onsubmit="return confirm('ยืนยันไม่อนุมัติคำขอลานี้?');">
+                        <input type="hidden" name="reject_id" value="<?= $u['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-danger">ไม่อนุมัติ</button>
+                    </form>
+                <?php endif; ?>
                 <a href="<?= BASE_URL ?>/leave/edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-secondary">แก้ไข</a>
                 <form method="post" style="display:inline;" onsubmit="return confirm('ยืนยันยกเลิกคำขอลานี้?');">
                     <input type="hidden" name="cancel_id" value="<?= $u['id'] ?>">

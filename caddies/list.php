@@ -55,7 +55,7 @@ if ($selected) {
     $monthWage = (float) $stmt->fetchColumn();
 
     $stmt = $pdo->prepare(
-        "SELECT lr.start_date, lr.end_date, lt.name AS type_name
+        "SELECT lr.start_date, lr.end_date, lr.status, lt.name AS type_name
          FROM leave_requests lr
          JOIN leave_types lt ON lt.id = lr.leave_type_id
          WHERE lr.caddy_id = ?
@@ -181,6 +181,7 @@ require __DIR__ . '/../includes/header.php';
         <?php if ($recentLeave): ?>
             <div class="card" style="margin-bottom:0; padding:12px 14px;">
                 <strong><?= e($recentLeave['type_name']) ?></strong>
+                <span class="badge <?= leaveStatusBadgeClass($recentLeave['status']) ?>"><?= e(leaveStatusLabel($recentLeave['status'])) ?></span>
                 <div class="font-mono text-muted" style="font-size:13px;"><?= e($recentLeave['start_date']) ?> — <?= e($recentLeave['end_date']) ?></div>
             </div>
         <?php else: ?>

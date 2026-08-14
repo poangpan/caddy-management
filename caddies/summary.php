@@ -25,7 +25,7 @@ if ($caddy) {
     $stats = $stmt->fetch();
 
     $stmt = $pdo->prepare(
-        "SELECT lr.start_date, lr.end_date, lr.note, lt.name AS type_name
+        "SELECT lr.start_date, lr.end_date, lr.note, lr.status, lt.name AS type_name
          FROM leave_requests lr
          JOIN leave_types lt ON lt.id = lr.leave_type_id
          WHERE lr.caddy_id = ?
@@ -97,16 +97,18 @@ require __DIR__ . '/../includes/header.php';
             <th>ประเภท</th>
             <th>ช่วงวันที่ลา</th>
             <th>หมายเหตุ</th>
+            <th>สถานะ</th>
         </tr>
         <?php foreach ($leaveHistory as $l): ?>
         <tr>
             <td><?= e($l['type_name']) ?></td>
             <td class="font-mono"><?= e($l['start_date']) ?> — <?= e($l['end_date']) ?></td>
             <td><?= e($l['note']) ?></td>
+            <td><span class="badge <?= leaveStatusBadgeClass($l['status']) ?>"><?= e(leaveStatusLabel($l['status'])) ?></span></td>
         </tr>
         <?php endforeach; ?>
         <?php if (!$leaveHistory): ?>
-        <tr><td colspan="3" class="text-muted">ไม่มีประวัติการลา</td></tr>
+        <tr><td colspan="4" class="text-muted">ไม่มีประวัติการลา</td></tr>
         <?php endif; ?>
     </table>
 </div>

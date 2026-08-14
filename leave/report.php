@@ -15,7 +15,7 @@ $stmt = $pdo->prepare(
     "SELECT lt.name, COUNT(lr.id) AS total
      FROM leave_types lt
      LEFT JOIN leave_requests lr ON lr.leave_type_id = lt.id
-        AND YEAR(lr.start_date) = ? AND MONTH(lr.start_date) = ?
+        AND YEAR(lr.start_date) = ? AND MONTH(lr.start_date) = ? AND lr.status != 'rejected'
      GROUP BY lt.id, lt.name
      ORDER BY lt.id"
 );

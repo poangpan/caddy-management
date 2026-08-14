@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      FROM caddies c
                      LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
                      LEFT JOIN (
-                         SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
+                         SELECT DISTINCT caddy_id FROM leave_requests WHERE status = 'approved' AND CURDATE() BETWEEN start_date AND end_date
                      ) lr ON lr.caddy_id = c.id
                      LEFT JOIN (
                          SELECT caddy_id, MIN(scheduled_at) AS scheduled_at
@@ -111,7 +111,7 @@ $stmt = $pdo->prepare(
      FROM caddies c
      LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
      LEFT JOIN (
-         SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
+         SELECT DISTINCT caddy_id FROM leave_requests WHERE status = 'approved' AND CURDATE() BETWEEN start_date AND end_date
      ) lr ON lr.caddy_id = c.id
      LEFT JOIN (
          SELECT caddy_id, MIN(scheduled_at) AS scheduled_at

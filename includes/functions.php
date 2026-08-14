@@ -63,7 +63,7 @@ function fetchQueueBoard(PDO $pdo, int $leadMinutes): array
          FROM caddies c
          LEFT JOIN caddy_queue_status cqs ON cqs.caddy_id = c.id
          LEFT JOIN (
-             SELECT DISTINCT caddy_id FROM leave_requests WHERE CURDATE() BETWEEN start_date AND end_date
+             SELECT DISTINCT caddy_id FROM leave_requests WHERE status = 'approved' AND CURDATE() BETWEEN start_date AND end_date
          ) lr ON lr.caddy_id = c.id
          LEFT JOIN (
              SELECT caddy_id,
@@ -102,7 +102,7 @@ function validateBookingInput(PDO $pdo, string $customerName, string $holes, str
 
     if ($caddyId && empty($errors)) {
         $stmt = $pdo->prepare(
-            'SELECT COUNT(*) FROM leave_requests WHERE caddy_id = ? AND ? BETWEEN start_date AND end_date'
+            "SELECT COUNT(*) FROM leave_requests WHERE caddy_id = ? AND status = 'approved' AND ? BETWEEN start_date AND end_date"
         );
         $stmt->execute([$caddyId, substr($scheduledAt, 0, 10)]);
         if ($stmt->fetchColumn() > 0) {
@@ -131,6 +131,24 @@ function validateLeaveInput(int $caddyId, int $leaveTypeId, string $startDate, s
     }
 
     return $errors;
+}
+
+function leaveStatusLabel(string $status): string
+{
+    return match ($status) {
+        'approved' => 'อนุมัติแล้ว',
+        'rejected' => 'ไม่อนุมัติ',
+        default => 'รออนุมัติ',
+    };
+}
+
+function leaveStatusBadgeClass(string $status): string
+{
+    return match ($status) {
+        'approved' => 'badge-success',
+        'rejected' => 'badge-danger',
+        default => 'badge-warning',
+    };
 }
 
 // รหัสแคดดี้สำหรับแสดงผล (ไม่ใช่ฟิลด์ในฐานข้อมูล) — สร้างจาก id เสมอ
