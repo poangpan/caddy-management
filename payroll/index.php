@@ -51,6 +51,7 @@ require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
     <h1>ปิดยอดค่าจ้างรายสัปดาห์</h1>
+    <a href="<?= BASE_URL ?>/payroll/history.php" class="btn btn-secondary">ดูประวัติการปิดยอดที่ผ่านมา</a>
 </div>
 
 <div class="stat-row">
@@ -77,6 +78,7 @@ require __DIR__ . '/../includes/header.php';
         <h3>สัปดาห์ <?= e($startDate) ?> — <?= e($endDate) ?></h3>
         <?php if ($period): ?>
             <span class="badge badge-neutral">🔒 ปิดยอดแล้ว เมื่อ <?= e($period['closed_at']) ?></span>
+            <a href="<?= BASE_URL ?>/payroll/export.php?period_id=<?= $period['id'] ?>" class="btn btn-primary btn-sm">Export CSV</a>
         <?php else: ?>
             <form method="post" onsubmit="return confirm('ยืนยันปิดยอดสัปดาห์นี้? หลังปิดยอดแล้วจะไม่สามารถแก้ไขได้');">
                 <button type="submit" class="btn btn-primary">ปิดยอด</button>
