@@ -22,6 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $holes = $_POST['holes'] ?? '';
     $scheduledAtRaw = $_POST['scheduled_at'] ?? '';
     $caddyId = (int) ($_POST['caddy_id'] ?? 0) ?: null;
+    $flight = trim($_POST['flight'] ?? '');
+    $playerCount = (int) ($_POST['player_count'] ?? 0);
+    if ($playerCount < 1) {
+        $playerCount = 1;
+    }
+    $isVip = isset($_POST['is_vip']) ? 1 : 0;
 
     $validation = validateBookingInput($pdo, $customerName, $holes, $scheduledAtRaw, $caddyId);
     $errors = $validation['errors'];
@@ -31,12 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $booking['holes'] = $holes;
     $booking['scheduled_at'] = $scheduledAtRaw;
     $booking['caddy_id'] = $caddyId;
+    $booking['flight'] = $flight;
+    $booking['player_count'] = $playerCount;
+    $booking['is_vip'] = $isVip;
 
     if (empty($errors)) {
         $pdo->prepare(
-            "UPDATE rounds SET caddy_id = ?, holes = ?, customer_name = ?, caddy_requested = ?, scheduled_at = ?
+            "UPDATE rounds SET caddy_id = ?, holes = ?, customer_name = ?, caddy_requested = ?, scheduled_at = ?, flight = ?, player_count = ?, is_vip = ?
              WHERE id = ? AND status = 'scheduled'"
-        )->execute([$caddyId, $holes, $customerName, $caddyId ? 1 : 0, $scheduledAt, $id]);
+        )->execute([$caddyId, $holes, $customerName, $caddyId ? 1 : 0, $scheduledAt, $flight ?: null, $playerCount, $isVip, $id]);
         setFlash('success', 'บันทึกการแก้ไขการจองล่วงหน้าเรียบร้อย');
         header('Location: ' . BASE_URL . '/bookings/create.php');
         exit;
@@ -86,6 +95,22 @@ require __DIR__ . '/../includes/header.php';
                     <option value="<?= $c['id'] ?>" <?= (int) $booking['caddy_id'] === (int) $c['id'] ? 'selected' : '' ?>><?= e($c['full_name']) ?></option>
                 <?php endforeach; ?>
             </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="flight">Flight</label>
+                <input type="text" id="flight" name="flight" value="<?= e($booking['flight']) ?>">
+            </div>
+            <div class="form-group">
+                <label for="player_count">จำนวนผู้เล่น</label>
+                <input type="number" id="player_count" name="player_count" min="1" step="1" value="<?= e((string) $booking['player_count']) ?>">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_vip" value="1" <?= $booking['is_vip'] ? 'checked' : '' ?> style="width:auto;">
+                ลูกค้า VIP
+            </label>
         </div>
         <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
         <a href="<?= BASE_URL ?>/bookings/create.php" class="btn btn-secondary">ยกเลิก</a>
