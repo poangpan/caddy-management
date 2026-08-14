@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $holes = $_POST['holes'] ?? '';
     $mode = $_POST['mode'] ?? 'queue';
     $requestedCaddyId = (int) ($_POST['caddy_id'] ?? 0);
+    $cartNumber = trim($_POST['cart_number'] ?? '');
 
     if ($customerName === '') {
         $errors[] = 'กรุณากรอกชื่อลูกค้า';
@@ -86,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors) && $caddyId) {
         $wageAmount = calculateRoundWage($pdo, $holes);
-        $pdo->prepare('INSERT INTO rounds (caddy_id, holes, customer_name, caddy_requested, wage_amount) VALUES (?, ?, ?, ?, ?)')
-            ->execute([$caddyId, $holes, $customerName, $caddyRequested, $wageAmount]);
+        $pdo->prepare('INSERT INTO rounds (caddy_id, holes, customer_name, caddy_requested, wage_amount, cart_number) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([$caddyId, $holes, $customerName, $caddyRequested, $wageAmount, $cartNumber ?: null]);
 
         $pdo->prepare(
             "INSERT INTO caddy_queue_status (caddy_id, status) VALUES (?, 'on_round')
@@ -126,7 +127,7 @@ $stmt->execute([$leadMinutes]);
 $caddyOptions = $stmt->fetchAll();
 
 $recentRounds = $pdo->query(
-    "SELECT r.holes, r.customer_name, r.caddy_requested, r.wage_amount, r.assigned_at, c.full_name
+    "SELECT r.holes, r.customer_name, r.caddy_requested, r.wage_amount, r.cart_number, r.assigned_at, c.full_name
      FROM rounds r JOIN caddies c ON c.id = r.caddy_id
      WHERE r.status != 'scheduled'
      ORDER BY r.assigned_at DESC LIMIT 10"
@@ -179,6 +180,10 @@ require __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="form-group">
+            <label for="cart_number">เลขรถกอล์ฟ</label>
+            <input type="text" id="cart_number" name="cart_number" value="<?= e($_POST['cart_number'] ?? '') ?>">
+        </div>
         <button type="submit" class="btn btn-primary">มอบหมายออกรอบ</button>
     </form>
 </div>
@@ -206,6 +211,7 @@ require __DIR__ . '/../includes/header.php';
             <th>ลูกค้า</th>
             <th>หลุม</th>
             <th>Caddy request</th>
+            <th>เลขรถกอล์ฟ</th>
             <th>ค่าจ้าง</th>
         </tr>
         <?php foreach ($recentRounds as $r): ?>
@@ -215,6 +221,7 @@ require __DIR__ . '/../includes/header.php';
             <td><?= e($r['customer_name']) ?></td>
             <td><?= e($r['holes']) ?></td>
             <td><?= $r['caddy_requested'] ? 'ใช่' : '-' ?></td>
+            <td class="font-mono"><?= e($r['cart_number']) ?: '-' ?></td>
             <td class="font-mono"><?= e($r['wage_amount']) ?></td>
         </tr>
         <?php endforeach; ?>
