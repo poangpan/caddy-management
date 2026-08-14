@@ -28,6 +28,8 @@ $selected = null;
 $ytdRounds = 0;
 $monthWage = 0.0;
 $recentLeave = null;
+$avgRating = null;
+$ratingCount = 0;
 
 if ($selectedId) {
     $stmt = $pdo->prepare('SELECT * FROM caddies WHERE id = ?');
@@ -63,6 +65,19 @@ if ($selected) {
     );
     $stmt->execute([$selectedId]);
     $recentLeave = $stmt->fetch() ?: null;
+
+    $stmt = $pdo->prepare(
+        "SELECT COUNT(*) AS rating_count,
+                AVG((rr.personality_rating + rr.politeness_rating + rr.knowledge_rating + rr.line_reading_rating
+                     + rr.speed_rating + rr.service_rating + rr.satisfaction_rating) / 7) AS avg_rating
+         FROM round_ratings rr
+         JOIN rounds r ON r.id = rr.round_id
+         WHERE r.caddy_id = ?"
+    );
+    $stmt->execute([$selectedId]);
+    $ratingStats = $stmt->fetch();
+    $ratingCount = (int) $ratingStats['rating_count'];
+    $avgRating = $ratingCount > 0 ? round((float) $ratingStats['avg_rating'], 1) : null;
 }
 
 function caddyListLink(string $filter, ?int $id = null): string
@@ -152,7 +167,7 @@ require __DIR__ . '/../includes/header.php';
         <h3 style="text-align:center; margin-bottom:2px;"><?= e($selected['full_name']) ?></h3>
         <p class="text-muted font-mono" style="text-align:center; margin-top:0;"><?= e(formatCaddyCode((int) $selected['id'])) ?></p>
 
-        <div class="stat-row" style="grid-template-columns: 1fr 1fr; margin-bottom:16px;">
+        <div class="stat-row" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom:16px;">
             <div class="stat-tile">
                 <div class="stat-tile-label">รอบปีนี้</div>
                 <div class="stat-tile-value"><?= $ytdRounds ?></div>
@@ -160,6 +175,11 @@ require __DIR__ . '/../includes/header.php';
             <div class="stat-tile stat-tile--ready">
                 <div class="stat-tile-label">ค่าจ้างเดือนนี้</div>
                 <div class="stat-tile-value" style="font-size:18px;"><?= e(number_format($monthWage, 2)) ?></div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-label">คะแนนเฉลี่ย</div>
+                <div class="stat-tile-value" style="font-size:18px;"><?= $avgRating !== null ? e(number_format($avgRating, 1)) . ' ★' : '-' ?></div>
+                <?php if ($ratingCount > 0): ?><div class="text-muted" style="font-size:11px;"><?= $ratingCount ?> ครั้ง</div><?php endif; ?>
             </div>
         </div>
 

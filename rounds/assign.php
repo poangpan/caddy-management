@@ -127,8 +127,12 @@ $stmt->execute([$leadMinutes]);
 $caddyOptions = $stmt->fetchAll();
 
 $recentRounds = $pdo->query(
-    "SELECT r.holes, r.customer_name, r.caddy_requested, r.wage_amount, r.cart_number, r.assigned_at, c.full_name
-     FROM rounds r JOIN caddies c ON c.id = r.caddy_id
+    "SELECT r.id, r.holes, r.customer_name, r.caddy_requested, r.wage_amount, r.cart_number, r.assigned_at, c.full_name,
+            rr.personality_rating, rr.politeness_rating, rr.knowledge_rating, rr.line_reading_rating,
+            rr.speed_rating, rr.service_rating, rr.satisfaction_rating
+     FROM rounds r
+     JOIN caddies c ON c.id = r.caddy_id
+     LEFT JOIN round_ratings rr ON rr.round_id = r.id
      WHERE r.status != 'scheduled'
      ORDER BY r.assigned_at DESC LIMIT 10"
 )->fetchAll();
@@ -213,8 +217,10 @@ require __DIR__ . '/../includes/header.php';
             <th>Caddy request</th>
             <th>เลขรถกอล์ฟ</th>
             <th>ค่าจ้าง</th>
+            <th>คะแนน</th>
         </tr>
         <?php foreach ($recentRounds as $r): ?>
+        <?php $avgRating = ratingAverage($r); ?>
         <tr>
             <td class="font-mono text-muted"><?= e($r['assigned_at']) ?></td>
             <td><?= e($r['full_name']) ?></td>
@@ -223,6 +229,14 @@ require __DIR__ . '/../includes/header.php';
             <td><?= $r['caddy_requested'] ? 'ใช่' : '-' ?></td>
             <td class="font-mono"><?= e($r['cart_number']) ?: '-' ?></td>
             <td class="font-mono"><?= e($r['wage_amount']) ?></td>
+            <td>
+                <?php if ($avgRating !== null): ?>
+                    <span class="badge badge-info"><?= e(number_format($avgRating, 1)) ?> ★</span>
+                    <a href="<?= BASE_URL ?>/rounds/rate.php?round_id=<?= $r['id'] ?>" class="btn btn-sm btn-secondary">แก้ไข</a>
+                <?php else: ?>
+                    <a href="<?= BASE_URL ?>/rounds/rate.php?round_id=<?= $r['id'] ?>" class="btn btn-sm btn-primary">ให้คะแนน</a>
+                <?php endif; ?>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

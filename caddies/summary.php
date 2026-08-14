@@ -33,6 +33,17 @@ if ($caddy) {
     );
     $stmt->execute([$id]);
     $leaveHistory = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare(
+        "SELECT rr.*, r.customer_name, r.assigned_at
+         FROM round_ratings rr
+         JOIN rounds r ON r.id = rr.round_id
+         WHERE r.caddy_id = ?
+         ORDER BY r.assigned_at DESC"
+    );
+    $stmt->execute([$id]);
+    $ratingHistory = $stmt->fetchAll();
+    $ratingDimensions = ratingDimensions();
 }
 
 require __DIR__ . '/../includes/header.php';
@@ -109,6 +120,39 @@ require __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
         <?php if (!$leaveHistory): ?>
         <tr><td colspan="4" class="text-muted">ไม่มีประวัติการลา</td></tr>
+        <?php endif; ?>
+    </table>
+</div>
+
+<div class="card">
+    <h3>คะแนนประเมิน</h3>
+    <table>
+        <tr>
+            <th>วันที่</th>
+            <th>ลูกค้า</th>
+            <th>บุคลิก</th>
+            <th>สุภาพ</th>
+            <th>รู้สนาม</th>
+            <th>อ่านไลน์</th>
+            <th>ความเร็ว</th>
+            <th>บริการ</th>
+            <th>พอใจ</th>
+            <th>เฉลี่ย</th>
+            <th>ความเห็น</th>
+        </tr>
+        <?php foreach ($ratingHistory as $rt): ?>
+        <tr>
+            <td class="font-mono text-muted"><?= e($rt['assigned_at']) ?></td>
+            <td><?= e($rt['customer_name']) ?></td>
+            <?php foreach (array_keys($ratingDimensions) as $key): ?>
+            <td class="font-mono text-right"><?= (int) $rt[$key . '_rating'] ?></td>
+            <?php endforeach; ?>
+            <td class="font-mono text-right"><strong><?= e(number_format(ratingAverage($rt), 1)) ?></strong></td>
+            <td><?= e($rt['comment']) ?></td>
+        </tr>
+        <?php endforeach; ?>
+        <?php if (!$ratingHistory): ?>
+        <tr><td colspan="11" class="text-muted">ไม่มีประวัติการให้คะแนน</td></tr>
         <?php endif; ?>
     </table>
 </div>

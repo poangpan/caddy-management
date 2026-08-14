@@ -151,6 +151,34 @@ function leaveStatusBadgeClass(string $status): string
     };
 }
 
+// มิติการให้คะแนนแคดดี้ (ตั๋ว #19) — key ตรงกับคอลัมน์ {key}_rating ในตาราง round_ratings เสมอ
+function ratingDimensions(): array
+{
+    return [
+        'personality' => 'บุคลิกภาพ',
+        'politeness' => 'ความสุภาพ',
+        'knowledge' => 'ความรู้สนาม',
+        'line_reading' => 'การอ่านไลน์',
+        'speed' => 'ความเร็วในการทำงาน',
+        'service' => 'การให้บริการ',
+        'satisfaction' => 'ความพึงพอใจโดยรวม',
+    ];
+}
+
+// คะแนนเฉลี่ยจากทุกมิติของแถว round_ratings หนึ่งแถว — คืน null ถ้าไม่มีข้อมูลคะแนน (เช่น LEFT JOIN ไม่เจอแถว)
+function ratingAverage(?array $ratingRow): ?float
+{
+    if (!$ratingRow || !isset($ratingRow['personality_rating']) || $ratingRow['personality_rating'] === null) {
+        return null;
+    }
+    $dimensions = ratingDimensions();
+    $sum = 0;
+    foreach (array_keys($dimensions) as $key) {
+        $sum += (int) $ratingRow[$key . '_rating'];
+    }
+    return round($sum / count($dimensions), 1);
+}
+
 // รหัสแคดดี้สำหรับแสดงผล (ไม่ใช่ฟิลด์ในฐานข้อมูล) — สร้างจาก id เสมอ
 function formatCaddyCode(int $id): string
 {
