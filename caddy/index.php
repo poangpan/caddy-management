@@ -139,7 +139,10 @@ require __DIR__ . '/../includes/caddy_header.php';
 </div>
 
 <div class="card">
-    <h3>ประวัติการลาของคุณ</h3>
+    <div class="page-header" style="margin-bottom:12px;">
+        <h3>ประวัติการลาของคุณ</h3>
+        <a href="<?= BASE_URL ?>/caddy/leave.php" class="btn btn-primary btn-sm">+ ขอลา</a>
+    </div>
     <table>
         <tr>
             <th>ประเภท</th>

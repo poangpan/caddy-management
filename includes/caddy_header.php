@@ -3,6 +3,11 @@
 requireCaddyLogin();
 $caddy = currentCaddy();
 $flash = getFlash();
+$currentPath = $_SERVER['SCRIPT_NAME'] ?? '';
+function caddyNavActive(string $path, string $needle): string
+{
+    return strpos($path, $needle) !== false ? ' is-active' : '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -23,7 +28,8 @@ $flash = getFlash();
             </div>
         </div>
         <nav class="sidebar-nav">
-            <a class="is-active" href="<?= BASE_URL ?>/caddy/index.php"><span>หน้าแรก</span></a>
+            <a class="<?= caddyNavActive($currentPath, '/caddy/index.php') ?>" href="<?= BASE_URL ?>/caddy/index.php"><span>หน้าแรก</span></a>
+            <a class="<?= caddyNavActive($currentPath, '/caddy/leave.php') ?>" href="<?= BASE_URL ?>/caddy/leave.php"><span>ขอลา</span></a>
         </nav>
         <div class="sidebar-footer">
             <div class="sidebar-user">
